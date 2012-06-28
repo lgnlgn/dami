@@ -1,6 +1,12 @@
 package org.dami.classification.common;
 
+import org.dami.common.Constants;
 
+/**
+ * implement your evaluator
+ * @author lgn
+ *
+ */
 public abstract class Evaluator {
 	public abstract String resultString() ;
 	
@@ -22,6 +28,11 @@ public abstract class Evaluator {
 		
 	}
 
+	/**
+	 * Accuracy evaluator for 2 classes classification
+	 * @author lgn
+	 *
+	 */
 	public static class BinaryAccuracy extends Evaluator{
 
 		private int totals = 0;
@@ -30,18 +41,24 @@ public abstract class Evaluator {
 		@Override
 		public String resultString() {
 			// TODO Auto-generated method stub
-			StringBuilder sb = new StringBuilder("-------------------------\n");
-			sb.append(String.format(" Accuracy : %d/%d =%.2f\n", corrects, totals, (corrects * 100.0 / totals)));
-			sb.append("-------------------------\n");
+			StringBuilder sb = new StringBuilder("-------------------------" + Constants.ENDL);
+			sb.append(String.format(" Accuracy : %d/%d =%.2f" + Constants.ENDL, corrects, totals, (corrects * 100.0 / totals)));
+			sb.append("-------------------------" + Constants.ENDL);
 			return sb.toString();
 		}
 
-		@Override
+		/**
+		 * use converted label!
+		 */
 		public void collect(int label, double[] probs) {
 			// TODO Auto-generated method stub
 			totals += 1;
 			if ((probs[0] > 0.5 && label == 0) ||(probs[0] < 0.5 && label == 1))
 				corrects += 1;
+		}
+		
+		public String toString(){
+			return this.resultString();
 		}
 		
 	}

@@ -1,5 +1,6 @@
 package org.dami.common;
 
+import java.io.File;
 import java.util.Properties;
 import java.util.Random;
 import java.util.TreeMap;
@@ -63,8 +64,8 @@ public class Utilities {
 	 * @return
 	 */
 	public static double randomDouble(double begin, double end){
-		// random value - 0.5 * span + middle_of_(begin,end)
-		return (r.nextDouble() - 0.5 ) * (end - begin) + (begin + end) / 2;
+		// (random value - 0.5) * span + middle_of_(begin,end)
+		return (r.nextDouble() - 0.5 ) * (end - begin) + ((begin + end) / 2);
 	}
 	
 	public static void main(String[] args){
@@ -150,15 +151,15 @@ public class Utilities {
 		return  head + tail /10.0; 
 	}
 	
-	public static TreeMap<Integer, Double> parseVector(String vectorString){
-		String[] info = vectorString.split("\\s+");
-		TreeMap<Integer, Double> vec = new TreeMap<Integer, Double>();
-		for(String str : info){
-			String[] kw = str.split(":");
-			vec.put(Integer.parseInt(kw[0]), Double.parseDouble(kw[1]));
-		}
-		return vec;
-	}
+//	public static TreeMap<Integer, Double> parseVector(String vectorString){
+//		String[] info = vectorString.split("\\s+");
+//		TreeMap<Integer, Double> vec = new TreeMap<Integer, Double>();
+//		for(String str : info){
+//			String[] kw = str.split(":");
+//			vec.put(Integer.parseInt(kw[0]), Double.parseDouble(kw[1]));
+//		}
+//		return vec;
+//	}
 	
 	public static int getIntFromProperties(Properties p, String key){
 		return Integer.parseInt((String)(p.getProperty(key)));
@@ -171,4 +172,23 @@ public class Utilities {
 	public static double getDoubleFromProperties(Properties p, String key){
 		return Double.parseDouble((String)(p.getProperty(key)));
 	}
+	
+	public static byte[] float2OutputBytes(float input){
+		int data=Float.floatToIntBits(input);
+		int j = 0;
+		byte[] outData=new byte[4];
+		outData[j++]=(byte)(data>>>24);
+		outData[j++]=(byte)(data>>>16);
+		outData[j++]=(byte)(data>>>8);
+		outData[j++]=(byte)(data>>>0);
+		return outData;
+	}
+	
+	public static String getAbsFilePrefixPath(String absPath){
+		File f = new File(absPath);
+		String name = f.getName();
+		int idx = name.lastIndexOf(".");
+		return f.getParent() + File.separator + name.substring(0, idx);
+	}
+	
 }

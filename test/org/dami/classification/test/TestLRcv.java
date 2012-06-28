@@ -6,7 +6,9 @@ import java.util.Properties;
 import org.dami.classification.common.Evaluator;
 import org.dami.classification.lr.SGDLogisticRegression;
 import org.dami.common.Constants;
-import org.dami.common.DataStorage;
+import org.dami.common.io.FileVectorReader;
+import org.dami.common.io.VectorStorage;
+
 public class TestLRcv {
 
 	/**
@@ -15,11 +17,17 @@ public class TestLRcv {
 	 */
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		String db = "e:/data/a9a.txt";
-//		String db = "e:/data/covtype";
+		String db = "e:/data/rcv1";
+//		String db = "d:/mushrooms";
 		SGDLogisticRegression lr = new SGDLogisticRegression();
-		DataStorage ds = new DataStorage.LabelFeatureWeightRAMStorage(db);
-		lr.loadData(ds);
+//		BytesDataReader ds = new BytesDataReader.RAMStorage(db, vsd);
+		
+		
+		FileVectorReader fvr = new FileVectorReader.LabelFeatureWeightBytesReader(db);
+		VectorStorage vs = new VectorStorage.RAMStorage(fvr);
+		
+		
+		lr.loadData(vs);
 		
 		Properties property = new Properties();
 //		property.setProperty("-wi1", "3");

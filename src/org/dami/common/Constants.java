@@ -1,6 +1,8 @@
 package org.dami.common;
 
 public class Constants {
+	
+	public final static String ENDL= System.getProperty("line.separator");
 	public final static String DATADESERIALIZER="dataDeserializer";
 	
 	public final static String MAXUSERID = "maxuid";
@@ -15,14 +17,17 @@ public class Constants {
 	public final static String CONVERGENCE = "convergence";
 		
 	
-	public final static String NUMBERS_SAMPLE="maxline";
+	public final static String NUMBER_SAMPLES="maxline";
 	public final static String MAXFEATUREID="maxfeatureid";
 	public final static String DATASET_INFO="dataset";
-	public final static String NUMBERS_CLASS="classes";
+	public final static String NUMBER_CLASSES="classes";
 	public final static String STOPCRITERIA="stop_criteria";
-
+	public final static String TOTAL_FEATURES="attributes";
+	
 	public final static String BIAS_LABEL_ORIGINAL = "-wl";
 	public final static String BIAS_LABEL_TRANSFORMED="-wi";
 
+	public final static String BIAS_LABEL = "-w";
 	
+	public final static String STAT_SUFFIX = ".sta";
 }
