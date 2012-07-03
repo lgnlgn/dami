@@ -1,10 +1,12 @@
-#**dami**#
 
-Scalable algorithms in **DA**ta **MI**ning.
+**dami**
+========
+
+Scalable algorithms in **da**ta **mi**ning.
 
 Our goal is to make algorithms that can handle hundreds of millions of data with a limited memory PC 
 
-Currently we have: 
+Currently we have : 
 
 - **classification**: 
 SGD for logistic regressions
@@ -19,6 +21,7 @@ Next release:
 
 - **graph**:
     Pagerank etc.
+
 
 ----------
 To achieve computation efficiency and memory utilization, two ways we have just adopted.

@@ -24,8 +24,10 @@ public class Constants {
 	public final static String STOPCRITERIA="stop_criteria";
 	public final static String TOTAL_FEATURES="attributes";
 	
-	public final static String BIAS_LABEL_ORIGINAL = "-wl";
-	public final static String BIAS_LABEL_TRANSFORMED="-wi";
+	public final static String VESTOC_STATUS="vector_status";
+	
+//	public final static String BIAS_LABEL_ORIGINAL = "-wl";
+//	public final static String BIAS_LABEL_TRANSFORMED="-wi";
 
 	public final static String BIAS_LABEL = "-w";
 	

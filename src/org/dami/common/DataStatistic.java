@@ -5,18 +5,29 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import org.dami.common.collection.IntArray;
+
 
 public abstract class DataStatistic {
+	/**
+	 * id count label featureSize ... 
+	 * @param sample
+	 */
 	abstract public void sampleInfoStat(Vector sample);
 	
+	/**
+	 * each feature[:weight] ...
+	 * @param sample
+	 * @param index
+	 */
 	abstract public void featureStat(Vector sample, int index);
 	
 	/**
-	 * return key=value format string
+	 * return key=value format string iterator
 	 * @return
 	 * @throws IOException
 	 */
-	abstract public String getNextStat() throws IOException;
+	abstract public Iterator<String> getStatIter() throws IOException;
 	
 	public String getOutputSuffix(){
 		return Constants.STAT_SUFFIX;
@@ -34,23 +45,40 @@ public abstract class DataStatistic {
 			}
 		}
 
-		public String getNextStat() throws IOException {
-			if (i == 0){
-				StringBuilder sb = new StringBuilder();
-				for(Entry<Integer, int[]> entry : labelInfoBag.entrySet()){
-					sb.append(String.format("%d:%d:%d ", entry.getKey(), entry.getValue()[0], entry.getValue()[1]));
-				}
-				i += 1;
-				return String.format("%s=%s", Constants.DATASET_INFO, sb.toString());
-			}else if (i == 1){
-				i += 1;
-				return String.format("%s=%d", Constants.NUMBER_CLASSES, labelInfoBag.size());
-			}
-			else{
-				return null;
-			}
-		}
 
+		
+		public Iterator<String> getStatIter(){
+			return new Iterator<String>() {
+				int i = 0; 
+				@Override
+				public boolean hasNext() {
+					return (i < 2) ? true  : false;
+				}
+
+				@Override
+				public String next() {
+					if (i == 0){
+						StringBuilder sb = new StringBuilder();
+						for(Entry<Integer, int[]> entry : labelInfoBag.entrySet()){
+							sb.append(String.format("%d:%d:%d ", entry.getKey(), entry.getValue()[0], entry.getValue()[1]));
+						}
+						i += 1;
+						return String.format("%s=%s", Constants.DATASET_INFO, sb.toString());
+					}else if (i == 1){
+						i += 1;
+						return String.format("%s=%d", Constants.NUMBER_CLASSES, labelInfoBag.size());
+					}
+					return null;
+				}
+
+				@Override
+				public void remove() {
+					;
+				}
+			};
+			
+		}
+		
 		@Override
 		public void featureStat(Vector sample, int index) {
 			//do nothing;
@@ -64,42 +92,59 @@ public abstract class DataStatistic {
 		int maxFeatureId = -1;
 		int samples = 0;
 		long features = 0;
+		int maxVid = -1;
 		int i = 0;
 		public void featureStat(Vector sample, int index) {
-			
 			if (sample.features[index] > maxFeatureId)
 				maxFeatureId = sample.features[index];
 			features += 1;
-			
 		}
 
-		
 
 		@Override
 		public void sampleInfoStat(Vector sample) {
 			samples += 1;
+			maxVid = Math.max(maxVid, sample.id);
 		}
 
 		@Override
-		public String getNextStat() throws IOException {
+		public Iterator<String> getStatIter() throws IOException {
 			// TODO Auto-generated method stub
-			if (i == 0){
-				i += 1;
-				return String.format("%s=%d", Constants.MAXFEATUREID, maxFeatureId);
-			}else if (i == 1){
-				i += 1;
-				return String.format("%s=%d", Constants.NUMBER_SAMPLES, samples);
-			}else if (i == 2){
-				i += 1;
-				return String.format("%s=%d", Constants.TOTAL_FEATURES, features);
-			}
-			return null;
+			return new Iterator<String>() {
+				int i = 0;
+				public boolean hasNext() {
+					return (i < 4)? true : false;
+				}
+
+				@Override
+				public String next() {
+					if (i == 0){
+						i += 1;
+						return String.format("%s=%d", Constants.MAXFEATUREID, maxFeatureId);
+					}else if (i == 1){
+						i += 1;
+						return String.format("%s=%d", Constants.NUMBER_SAMPLES, samples);
+					}else if (i == 2){
+						i += 1;
+						return String.format("%s=%d", Constants.TOTAL_FEATURES, features);
+					}else if (i == 3){
+						i += 1;
+						return String.format("%s=%d", Constants.MAXUSERID, maxVid);
+					}
+					return null;
+				}
+
+				@Override
+				public void remove() {
+				}
+			};
 		}
 	}
 	
 	public static class FeatureFrequencyStatistic extends DataStatistic{
-		HashMap<Integer, Integer> featureBag = new HashMap<Integer, Integer>();
-		Iterator<Entry<Integer, Integer>> iter =null;
+	
+		IntArray featureArray = new IntArray(1024);
+		int i = 0;
 
 		public String getOutputSuffix() {
 			return ".freq";
@@ -114,26 +159,42 @@ public abstract class DataStatistic {
 
 		@Override
 		public void featureStat(Vector sample, int index) {
-			Integer counts = featureBag.get(sample.features[index]);
-			if (counts == null){
-				featureBag.put(sample.features[index], sample.count);
+			if (featureArray.capacity() < sample.features[index]){
+				featureArray.setForcibly(sample.features[index], sample.count);
 			}else{
-				featureBag.put(sample.features[index], sample.count + counts);
+				int counts = featureArray.get(sample.features[index]);
+				featureArray.set(sample.features[index], sample.count + counts);
 			}
 		}
 		
+
+
+
 		@Override
-		public String getNextStat() throws IOException {
+		public Iterator<String> getStatIter() throws IOException {
 			// TODO Auto-generated method stub
-			if (iter == null){
-				iter = this.featureBag.entrySet().iterator();
-			}
-			if (iter.hasNext()){
-				Entry<Integer, Integer>  entry= iter.next();
-				return 
-						String.format("%d\t%d", entry.getKey(), entry.getValue());
-			}else
-				return null;
+			return new Iterator<String>() {
+
+				int i = 0;
+				public boolean hasNext() {
+					return (i < featureArray.size()) ? true : false;
+						 
+				}
+
+				public String next() {
+					while (featureArray.get(i) <= 0){
+						i += 1;// pass 0
+					}
+					String a = String.format("%d\t%d", i ,featureArray.get(i));
+					i += 1;
+					return a;
+				}
+
+				@Override
+				public void remove() {
+				}
+			};
 		}
 	}
+	
 }

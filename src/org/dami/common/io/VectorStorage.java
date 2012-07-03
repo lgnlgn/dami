@@ -10,6 +10,11 @@ import org.dami.common.Constants;
 import org.dami.common.Utilities;
 import org.dami.common.Vector;
 
+/**
+ * Vectors reading for algorithms
+ * @author lgn
+ *
+ */
 public abstract class VectorStorage implements DataReader<Vector>{
 	Properties dataStatus;
 	FileVectorReader reader ;

@@ -1,22 +1,19 @@
 package org.dami.significanttesting;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Collections;
 import java.util.Arrays;
 
 import org.dami.common.Constants;
 import org.dami.common.Utilities;
 import org.dami.common.Vector;
 
+import org.dami.common.collection.IntArray;
 import org.dami.common.io.FileVectorReader;
 import org.dami.common.io.FileVectorWriter;
 

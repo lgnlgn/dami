@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import org.dami.common.Constants;
 import org.dami.common.DataStatistic;
@@ -56,8 +57,11 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 				}else{
 					bw = new BufferedWriter(new FileWriter(pathPrefix + stat.getOutputSuffix(), true));
 				}
-				for(String pair = stat.getNextStat(); pair != null; pair = stat.getNextStat())
-					bw.write(pair + Constants.ENDL); 
+				
+				Iterator<String> iter = stat.getStatIter();
+				while(iter.hasNext()){
+					bw.write(iter.next() + Constants.ENDL);
+				}
 				bw.close();
 			}
 		}
@@ -77,16 +81,7 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 		dsl.addListener(stats);
 	}
 
-	public static FileVectorConverter classificationFormatConverter(String filePath, String outPrefix){
-		FileVectorReader reader = new FileVectorReader.LabelFeatureWeightLineReader(filePath);
-		FileVectorWriter writer = new FileVectorWriter.LabelFeatureWeightBytesWriter(outPrefix);
 		
-		return new FileVectorConverter(reader, writer, 
-				new DataStatistic.NormalStatistic(), new DataStatistic.LabelStatistic());
-	}
-	
-	
-	
 	
 	@Override
 	public void convert() throws IOException {
@@ -101,18 +96,44 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 		}
 		reader.close();
 		writer.close();
-		if (dsl.toStat()){
-			dsl.outputStat(outPrefix);
-			
-			BufferedWriter bw = new BufferedWriter(new FileWriter(this.outPrefix + Constants.STAT_SUFFIX, true));
-			bw.write(String.format("%s=%s" + Constants.ENDL, Constants.DATADESERIALIZER, this.writer.getDeserClass().getName()));
-			bw.close();
-		}
+		
+		dsl.outputStat(outPrefix);
+
+		BufferedWriter bw = new BufferedWriter(new FileWriter(this.outPrefix + Constants.STAT_SUFFIX, true));
+		bw.write(String.format("%s=%s" + Constants.ENDL, Constants.DATADESERIALIZER, this.writer.getDeserClass().getName()));
+		bw.write(String.format("%s=%d" + Constants.ENDL, Constants.VESTOC_STATUS, 
+				((FileVectorWriter)this.writer).getVectorStatus().getVectorParameter()));
+		bw.close();
+		
 	}
 	
 	public String toString(){
 		return String.format("input:%s\noutput:%s\nparser:%s\nserializer:%s", input, 
 				outPrefix, this.reader.getClass().getName(), this.writer.getClass().getName());
 	}
+	
+	public static FileVectorConverter normalclassificationFormatConverter(String filePath, String outPrefix){
+		FileVectorReader reader = new FileVectorReader.LineReader(filePath, " ", ":", Vector.normalClassificationFormat());
+		FileVectorWriter writer = new FileVectorWriter.BytesWriter(outPrefix,  Vector.normalClassificationFormat());
+		
+		return new FileVectorConverter(reader, writer, 
+				new DataStatistic.NormalStatistic(), new DataStatistic.LabelStatistic());
+	}
 
+	
+	/**
+	 * you must make sure the file input is ordered by the aggregate column
+	 * @param filePath
+	 * @param output
+	 * @return
+	 */
+	public static FileVectorConverter graphWithoutWeightConverter(String filePath, String output, int aggrColIdx){
+		return graphWithoutWeightConverter(filePath, output, aggrColIdx, Vector.idOnlyFormat());
+	}
+	
+	public static FileVectorConverter graphWithoutWeightConverter(String filePath, String output, int aggrColIdx, Vector.Status vs){
+		FileVectorReader reader = new FileVectorReader.TupleReader(filePath, "\\s+", aggrColIdx, 1);
+		FileVectorWriter writer = new FileVectorWriter.BytesWriter(output,  vs);
+		return new FileVectorConverter(reader, writer, new DataStatistic.NormalStatistic());
+	}
 }
