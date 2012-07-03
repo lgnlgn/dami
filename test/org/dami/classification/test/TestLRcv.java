@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.dami.classification.common.Evaluator;
 import org.dami.classification.lr.SGDLogisticRegression;
 import org.dami.common.Constants;
+import org.dami.common.Vector;
 import org.dami.common.io.FileVectorReader;
 import org.dami.common.io.VectorStorage;
 
@@ -17,13 +18,15 @@ public class TestLRcv {
 	 */
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		String db = "e:/data/rcv1";
-//		String db = "d:/mushrooms";
+//		String db = "e:/data/rcv1";
+		String db = "d:/mu";
 		SGDLogisticRegression lr = new SGDLogisticRegression();
 //		BytesDataReader ds = new BytesDataReader.RAMStorage(db, vsd);
 		
 		
-		FileVectorReader fvr = new FileVectorReader.LabelFeatureWeightBytesReader(db);
+//		FileVectorReader fvr = new FileVectorReader.LabelFeatureWeightBytesReader(db);
+		
+		FileVectorReader fvr = new FileVectorReader.BytesReader(db, new Vector.Status(0x10 + 0x8 + 0x4));
 		VectorStorage vs = new VectorStorage.RAMStorage(fvr);
 		
 		

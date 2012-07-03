@@ -19,7 +19,7 @@ public class TestPredict {
 		SGDLogisticRegression lr = new SGDLogisticRegression();
 		lr.loadModel(db + ".model");
 		
-		DataReader<Vector> reader = new FileVectorReader.LabelFeatureWeightLineReader(test);
+		DataReader<Vector> reader = FileVectorReader.normalClassificationFormatLineReader(test);
 //		DataReader<Vector> reader = new FileVectorReader.LabelFeatureWeightBytesReader(db);
 		reader.open();
 		Evaluator acc = new Evaluator.BinaryAccuracy();

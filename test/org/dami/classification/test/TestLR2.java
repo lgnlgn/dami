@@ -24,7 +24,7 @@ public class TestLR2 {
 		String db = "e:/data/mushrooms";
 		SGDLogisticRegression lr = new SGDLogisticRegression();
 		
-		FileVectorReader fvr = new FileVectorReader.LabelFeatureWeightBytesReader(db);
+		FileVectorReader fvr = FileVectorReader.normalClassificationFormatBytesReader(db);
 		VectorStorage vs = new VectorStorage.RAMStorage(fvr);
 		
 		lr.loadData(vs);

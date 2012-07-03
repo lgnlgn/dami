@@ -9,8 +9,8 @@ import org.dami.significanttesting.BigraphRandomizeSwapper;
 public class TestBiSwap {
 	public static void main(String[] args) throws IOException{
 		
-		FileVectorReader reader = new FileVectorReader.FeatureOnlyLineReader("e:/data/mushroom.dat");
-		FileVectorWriter writer = new FileVectorWriter.FeatureOnlyLineWriter("d:/mu");
+		FileVectorReader reader = FileVectorReader.normalFIMFormatLineReader("e:/data/mushroom.dat");
+		FileVectorWriter writer = FileVectorWriter.normalFIMFormatLineWriter("d:/mu");
 		BigraphRandomizeSwapper swapper = new BigraphRandomizeSwapper(reader, writer, 500000, 4);
 		swapper.runSwap();
 	}

@@ -2,7 +2,7 @@ package org.dami.common;
 
 import java.util.ArrayList;
 
-import org.dami.significanttesting.IntArray;
+import org.dami.common.collection.IntArray;
 
 public class TestArray {
 

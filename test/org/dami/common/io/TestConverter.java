@@ -7,9 +7,9 @@ import org.dami.common.io.FileVectorConverter;
 public class TestConverter {
 	public static void main(String[] args) throws IOException{
 		String input = "e:/data/mushrooms.txt";
-		String out = "e:/data/mushrooms";
+		String out = "d:/mu";
 		
-		FileVectorConverter fvc = FileVectorConverter.classificationFormatConverter(input, out);
+		FileVectorConverter fvc = FileVectorConverter.normalclassificationFormatConverter(input, out);
 		fvc.convert();
 		System.out.println(fvc);
 	}
