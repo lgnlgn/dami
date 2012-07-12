@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -78,9 +79,7 @@ public class SGDLogisticRegression implements Classifier{
 	
 	private void init(){
 		featureWeights = new double[maxFeatureId + 1];
-		for(int i = 0 ; i< featureWeights.length; i++){
-			featureWeights[i] = initWeight;
-		}
+		Arrays.fill(featureWeights, initWeight);
 	}
 	
 	private double gradientDescend(Vector sample){
@@ -94,8 +93,9 @@ public class SGDLogisticRegression implements Classifier{
 		double partialDerivation =  tmp  / (tmp * tmp + 2 * tmp + 1) ;
 
 		for(int i = 0 ; i < sample.featureSize; i++){
+			// w <- w + alpha * (error * partial_derivation - lambda * w) 
 			featureWeights[sample.features[i]] += 
-					alpha * (error * sample.weights[i] * partialDerivation) * sample.weights[i] ;
+					alpha * (error * sample.weights[i] * partialDerivation - lambda * featureWeights[sample.features[i]]) ;
 		}
 		return error;
 	}
@@ -107,7 +107,7 @@ public class SGDLogisticRegression implements Classifier{
 		
 		double corrects  = 0;
 		double lastCorrects = -1;
-		
+		Vector sample = new Vector();
 		
 		double multi = (biasWeightRound * minSamples + maxSamples)/(minSamples + maxSamples + 0.0);
 		
@@ -123,7 +123,8 @@ public class SGDLogisticRegression implements Classifier{
 			corrects = 0;
 			int cc = 0;
 			
-			for(Vector sample = dataEntry.next(); sample != null; sample = dataEntry.next(), c+=1){
+			
+			for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
 				if (c % fold == remain){ // no train
 					;
 				}else{ //train
@@ -144,6 +145,7 @@ public class SGDLogisticRegression implements Classifier{
 						sume += Math.abs(error);
 					}
 				}
+				c += 1;
 			}
 
 			avge = sume / cc;
@@ -153,20 +155,20 @@ public class SGDLogisticRegression implements Classifier{
 			
 			if (corrects  < lastCorrects ){ //
 				if (!alphaSetted){
-					this.alpha *= 0.1;
+					this.alpha *= 0.5;
 					if (alpha < minAlpha)
 						alpha = minAlpha;
 				}
 				if (!lambdaSetted){
-					this.lambda *= 0.1;
+					this.lambda *= 0.9;
 					if (lambda < minLambda)
 						lambda = minLambda;
 				}
-				if (alphaSetted && !lambdaSetted && lambda < alpha * (minLambda/minAlpha)){
-					lambda = alpha * (minLambda/minAlpha);
-				}else if (!alphaSetted && lambdaSetted && alpha < lambda * (minAlpha / minLambda)){
-					alpha = lambda * (minAlpha / minLambda);
-				}
+//				if (alphaSetted && !lambdaSetted && lambda < alpha * (minLambda/minAlpha)){
+//					lambda = alpha * (minLambda/minAlpha);
+//				}else if (!alphaSetted && lambdaSetted && alpha < lambda * (minAlpha / minLambda)){
+//					alpha = lambda * (minAlpha / minLambda);
+//				}
 			}
 			System.out.println(String.format("#%d loop%d\ttime:%d(ms)\tacc: %.3f(approx)\tavg_error:%.6f", cc, l, (timeEnd - timeStart), acc , avge));
 		}
@@ -181,7 +183,7 @@ public class SGDLogisticRegression implements Classifier{
 		bw.write(this.dataEntry.getDataSetInfo().get(Constants.DATASET_INFO) + Constants.ENDL);
 		for(int i = 0 ; i < this.featureWeights.length; i++){
 			if (this.featureWeights[i] == initWeight)
-				bw.write("0.0" + Constants.ENDL);
+				bw.write("0" + Constants.ENDL);
 			else
 				bw.write(String.format("%.6f" + Constants.ENDL, this.featureWeights[i]));
 		}
@@ -239,12 +241,13 @@ public class SGDLogisticRegression implements Classifier{
 				rate = 0.5;
 	
 			if (alpha == null){
-				alpha = 1.0 / rate;
-				minAlpha = alpha * 0.1 / Math.pow(1 + rate, 1.8);
+				alpha = 0.5 / rate;
+				minAlpha = alpha  / Math.pow(1 + rate, 1.8);
 			}
 			if (this.lambda == null){
-				lambda = 0.00005 / rate;
-				minLambda = lambda * 0.1 / Math.pow(1 + rate, 1.8);
+				lambda = 0.00006 / rate;
+//				minLambda = lambda  / Math.pow(1 + rate, 1.8);
+				minLambda = 0.000001;
 			}
 			if (this.stop == null){
 				stop = 0.001;
@@ -267,8 +270,11 @@ public class SGDLogisticRegression implements Classifier{
 			this.dataEntry.reOpenData();
 			int c = 1;
 			double[] resultProbs = new double[2];
-			for(Vector sample = dataEntry.next(); sample != null; sample = dataEntry.next(), c+=1){
+			Vector sample = new Vector();
+			for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
 				if (c % fold == i){
+					if (sample.featureSize == 0)
+						continue;
 					this.predict(sample, resultProbs);
 					for(Evaluator e : evaluators){
 						e.collect(dataInfo[LABELRANGEBASE + sample.label][0], resultProbs);
@@ -295,7 +301,7 @@ public class SGDLogisticRegression implements Classifier{
 		
 		for(Entry<Object, Object> entry : prop.entrySet()){
 			String  key= entry.getKey().toString();
-			if (key.startsWith(Constants.BIAS_LABEL)){
+			if (key.startsWith(Constants.BIAS_LABEL_ARG)){
 				biasLabel = Integer.parseInt(key.substring(2));
 				biasWeightRound = Integer.parseInt(entry.getValue().toString());
 			}
@@ -325,14 +331,17 @@ public class SGDLogisticRegression implements Classifier{
 		BufferedWriter bw = new BufferedWriter(new FileWriter(resultPath));
 		double[] resultProbs = new double[2];
 		int idx = -1;
-		for(Vector current = data.next(); current != null; current = data.next()){
-			this.predict(current, resultProbs);
+		Vector sample = new Vector();
+		for(data.next(sample); sample.featureSize >= 0; data.next(sample)){
+			if (sample.featureSize == 0)
+				continue;
+			this.predict(sample, resultProbs);
 			for(Evaluator e : evaluators){
-				int tmp = dataInfo[LABELRANGEBASE + current.label][0];
+				int tmp = dataInfo[LABELRANGEBASE + sample.label][0];
 				e.collect(tmp, resultProbs);
 			}
 			idx = resultProbs[0] > resultProbs[1] ? 0 : 1;
-			bw.write(String.format("%d\t%.4f" + Constants.ENDL, current.label, resultProbs[idx]));
+			bw.write(String.format("%d\t%.4f" + Constants.ENDL, sample.label, resultProbs[idx]));
 		}
 		bw.close();
 		for(Evaluator e : evaluators){

@@ -10,7 +10,7 @@ public class TestBiSwap {
 	public static void main(String[] args) throws IOException{
 		
 		FileVectorReader reader = FileVectorReader.normalFIMFormatLineReader("e:/data/mushroom.dat");
-		FileVectorWriter writer = FileVectorWriter.normalFIMFormatLineWriter("d:/mu");
+		FileVectorWriter writer = FileVectorWriter.normalFIMFormatLineWriter("d:/muu");
 		BigraphRandomizeSwapper swapper = new BigraphRandomizeSwapper(reader, writer, 500000, 4);
 		swapper.runSwap();
 	}

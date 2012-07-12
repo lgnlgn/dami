@@ -1,4 +1,4 @@
-package org.dami.recommendation.common;
+package org.dami.common.collection;
 
 /**
  * 

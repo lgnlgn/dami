@@ -17,6 +17,7 @@ public class IntArray {
 		this.array = new int[initSize];
 	}
 	
+	
 	/**
 	 * append an item
 	 * @param elem

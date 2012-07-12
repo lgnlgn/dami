@@ -9,7 +9,7 @@ public class RatingInfo {
 		
 	public int userId;
 	public int itemId;
-	public double rating;
+	public float rating;
 	
 	/**
 	 * 
@@ -19,7 +19,7 @@ public class RatingInfo {
 
 	
 	public String toString(){
-		return userId + " , " + itemId + " : " + rating;
+		return String.format("uid: %d\tiid: %d \trating: %.1f", userId, itemId, rating);
 	}
 	
 	public RatingInfo(){

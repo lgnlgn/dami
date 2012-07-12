@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Properties;
 
+
 import org.dami.common.Constants;
 import org.dami.common.Utilities;
 import org.dami.common.Vector;
@@ -16,9 +17,12 @@ import org.dami.common.Vector;
  *
  */
 public abstract class VectorStorage implements DataReader<Vector>{
-	Properties dataStatus;
-	FileVectorReader reader ;
-	Vector current;
+	protected Properties dataStatus;
+	protected FileVectorReader reader ;
+	
+	public interface RandomAccess{
+		public void getVectorById(Vector sample, int id) throws IOException;
+	}
 	
 	protected VectorStorage(FileVectorReader reader) throws IOException{
 		if (reader == null)
@@ -35,7 +39,7 @@ public abstract class VectorStorage implements DataReader<Vector>{
 		
 		this.reader = reader;		
 		dataStatus = p;
-		current = new Vector();
+
 	}
 	
 	public void reOpenData() throws IOException{
@@ -65,44 +69,67 @@ public abstract class VectorStorage implements DataReader<Vector>{
 		}
 
 		@Override
-		public Vector next() throws IOException {
-			return reader.next();
+		public synchronized void next(Vector sample) throws IOException {
+			reader.next(sample);
 		}
 		
 	}
 	
-	public static class RAMStorage extends VectorStorage{
+	/**
+	 * do not support random access
+	 * @author lgn
+	 *
+	 */
+	public static class RAMCompactStorage extends VectorStorage{
 
 		int[] xlabels = null; // label 
 		int[][] x = null;  // features
-		double[][] xweights = null;  //weights
+		float[][] xweights = null;  //weights
 		int[] xcounts = null;  //count
 		int[] xids = null;     //id
 		int currentIdx = 0;  //current index of array
 		
-		public RAMStorage(FileVectorReader reader) throws IOException {
+		Vector.Status vs = null;
+		public RAMCompactStorage(FileVectorReader reader) throws IOException {
 			super(reader);
-			int samples = Utilities.getIntFromProperties(dataStatus, Constants.NUMBER_SAMPLES);
-			xlabels = new int[samples];
-			x = new int[samples][];
-			xweights = new double[samples][];
-			xcounts = new int[samples];
-			xids = new int[samples];
-			reader.open();
 			
-			for(current = reader.next(); current != null; current = reader.next()){
+			vs = this.reader.getVectorParameter();
+			int samples = Utilities.getIntFromProperties(dataStatus, Constants.NUMBER_SAMPLES);
+			Vector current = new Vector();
+			
+			x = new int[samples][];
+			if (vs.hasLabel)
+				xlabels = new int[samples];
+			if (vs.hasWeight)
+				xweights = new float[samples][];
+			if (vs.hasCount)
+				xcounts = new int[samples];
+			if (vs.hasId)
+				xids = new int[samples];
+			
+			reader.open();
+			for(reader.next(current); current.featureSize >= 0; reader.next(current)){
 				x[currentIdx] = new int[current.featureSize];
-				xweights[currentIdx] = new double[current.featureSize];
-				for(int i = 0 ; i < current.featureSize; i++){
-					x[currentIdx][i] = current.features[i];
-					xweights[currentIdx][i] = current.weights[i];
+				if (vs.hasWeight){
+					xweights[currentIdx] = new float[current.featureSize];
+					for(int i = 0 ; i < current.featureSize; i++){
+						x[currentIdx][i] = current.features[i];
+						xweights[currentIdx][i] = current.weights[i];
+					}
 				}
-				xlabels[currentIdx] = current.label;
-				xcounts[currentIdx] = current.count;
-				xids[currentIdx] = current.id;
+				else
+					for(int i = 0 ; i < current.featureSize; i++){
+						x[currentIdx][i] = current.features[i];
+					}
+				if (vs.hasLabel)
+					xlabels[currentIdx] = current.label;
+				if (vs.hasCount)
+					xcounts[currentIdx] = current.count;
+				if (vs.hasId)
+					xids[currentIdx] = current.id;
 				currentIdx += 1;
 			}
-			current = reader.sample;
+//			current = reader.sample;
 //			System.out.println(currentIdx);
 			reader.close();
 		}
@@ -116,27 +143,40 @@ public abstract class VectorStorage implements DataReader<Vector>{
 		}
 
 		@Override
-		public Vector next() throws IOException {
+		public synchronized void next(Vector sample) throws IOException {
 			if (currentIdx >= this.xlabels.length){
-				return null;
+				sample.featureSize = -1;
+				return ;
 			}
 			else{
 //				try{
-				current.label = xlabels[currentIdx];
-				current.count = xcounts[currentIdx];
-				current.id = xids[currentIdx];
-				current.featureSize = x[currentIdx].length; //always >= 0 
-				for(int i = 0 ; i < x[currentIdx].length; i++){
-					current.features[i] = x[currentIdx][i];
-					current.weights[i] = (float)xweights[currentIdx][i];
+				if (vs.hasLabel)
+					sample.label = xlabels[currentIdx];
+				if (vs.hasCount)
+					sample.count = xcounts[currentIdx];
+				if (vs.hasId)
+					sample.id = xids[currentIdx];
+				sample.featureSize = x[currentIdx].length; //always >= 0 
+				if (vs.hasWeight)
+					for(int i = 0 ; i < x[currentIdx].length; i++){
+						sample.features[i] = x[currentIdx][i];
+						sample.weights[i] =  xweights[currentIdx][i];
+					}
+				else{
+					System.arraycopy(x[currentIdx], 0, sample.features, 0, x[currentIdx].length);
+//					for(int i = 0 ; i < x[currentIdx].length; i++){
+//						sample.features[i] = x[currentIdx][i];
+//					}
 				}
 //				}catch (NullPointerException e){
 //					System.out.println(currentIdx);
 //				}
 			}
 			currentIdx += 1;
-			return current;
+//			return current;
 		}
 		
 	}
+	
+	
 }

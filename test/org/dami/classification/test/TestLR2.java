@@ -25,7 +25,7 @@ public class TestLR2 {
 		SGDLogisticRegression lr = new SGDLogisticRegression();
 		
 		FileVectorReader fvr = FileVectorReader.normalClassificationFormatBytesReader(db);
-		VectorStorage vs = new VectorStorage.RAMStorage(fvr);
+		VectorStorage vs = new VectorStorage.RAMCompactStorage(fvr);
 		
 		lr.loadData(vs);
 		Properties p = new Properties();

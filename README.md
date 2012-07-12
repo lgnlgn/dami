@@ -4,7 +4,8 @@
 
 Scalable algorithms in **da**ta **mi**ning.
 
-Our goal is to make algorithms that can handle hundreds of millions of data with a limited memory PC 
+dami is writen in Java. Our goal is to make algorithms that can handle hundreds of millions of data with a limited memory PC 
+
 
 Currently we have : 
 
@@ -12,22 +13,30 @@ Currently we have :
 SGD for logistic regressions
 	
 - **recommendation**:
-    SlopeOne, SVD, RSVD, neighborhood-SVD
+    SlopeOne, SVD, RSVD, itemneighborhood-SVD
 	
 - **significant test**:
  swap randomization
 
 - **graph**:
-    Pagerank etc.
+    Pagerank.
 
-Next release:
+Future:
 
-- code refactor for recommendation
+- **IO**:
+	Buffered vector reader, High performance text parser
 
 - **similarity**:
     simhash 
 
 
+*2012/7/12 Release Notes:*
+
+
+
+>code refactoring for recommendation and IO
+
+>To run RMSE for recommendation, you first need to see *`movielens_convert.py`* for converting and/or splitting movielens data, and see *`CFDataConverter`* and *`TestSVD`*
 
 ----------
 To achieve computation efficiency and memory utilization, two ways we have just adopted.

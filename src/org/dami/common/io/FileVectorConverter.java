@@ -22,7 +22,7 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 
 	public static class DataStatisticListener {
 
-		ArrayList<DataStatistic> statistics = new ArrayList<DataStatistic>(2);
+		ArrayList<DataStatistic> statistics = new ArrayList<DataStatistic>(3);
 
 		
 		public void addListener(DataStatistic... stats){
@@ -82,12 +82,15 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 	}
 
 		
-	
-	@Override
-	public void convert() throws IOException {
+	public void convert(int initVectorSize)throws IOException{
 		reader.open();
 		writer.open();
-		for(Vector sample = reader.next(); sample != null; sample = reader.next()){ //parsed
+		Vector sample = new Vector(initVectorSize);
+		for(reader.next(sample); sample.featureSize > 0;  reader.next(sample)){ //parsed
+			
+			if (sample.featureSize == 0)
+				continue;
+			
 			writer.write(sample);
 			
 			if (dsl.toStat()){
@@ -104,6 +107,11 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 		bw.write(String.format("%s=%d" + Constants.ENDL, Constants.VESTOC_STATUS, 
 				((FileVectorWriter)this.writer).getVectorStatus().getVectorParameter()));
 		bw.close();
+	}
+	
+	@Override
+	public void convert() throws IOException {
+		this.convert(500000);
 		
 	}
 	
@@ -117,7 +125,7 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 		FileVectorWriter writer = new FileVectorWriter.BytesWriter(outPrefix,  Vector.normalClassificationFormat());
 		
 		return new FileVectorConverter(reader, writer, 
-				new DataStatistic.NormalStatistic(), new DataStatistic.LabelStatistic());
+				new DataStatistic.CommonStatistic(), new DataStatistic.LabelStatistic());
 	}
 
 	
@@ -134,6 +142,6 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 	public static FileVectorConverter graphWithoutWeightConverter(String filePath, String output, int aggrColIdx, Vector.Status vs){
 		FileVectorReader reader = new FileVectorReader.TupleReader(filePath, "\\s+", aggrColIdx, 1);
 		FileVectorWriter writer = new FileVectorWriter.BytesWriter(output,  vs);
-		return new FileVectorConverter(reader, writer, new DataStatistic.NormalStatistic());
+		return new FileVectorConverter(reader, writer, new DataStatistic.CommonStatistic());
 	}
 }

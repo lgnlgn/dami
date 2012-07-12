@@ -88,16 +88,19 @@ public abstract class DataStatistic {
 		
 	}
 	
-	public static class NormalStatistic extends DataStatistic{
+	public static class CommonStatistic extends DataStatistic{
 		int maxFeatureId = -1;
 		int samples = 0;
 		long features = 0;
 		int maxVid = -1;
 		int i = 0;
+		double weightSum;
+		int maxFeatureSize = 0;
 		public void featureStat(Vector sample, int index) {
 			if (sample.features[index] > maxFeatureId)
 				maxFeatureId = sample.features[index];
 			features += 1;
+			weightSum += sample.weights[index];
 		}
 
 
@@ -105,15 +108,15 @@ public abstract class DataStatistic {
 		public void sampleInfoStat(Vector sample) {
 			samples += 1;
 			maxVid = Math.max(maxVid, sample.id);
+			maxFeatureSize = Math.max(maxFeatureSize, sample.featureSize);
 		}
 
 		@Override
 		public Iterator<String> getStatIter() throws IOException {
-			// TODO Auto-generated method stub
 			return new Iterator<String>() {
 				int i = 0;
 				public boolean hasNext() {
-					return (i < 4)? true : false;
+					return (i < 6)? true : false;
 				}
 
 				@Override
@@ -129,7 +132,13 @@ public abstract class DataStatistic {
 						return String.format("%s=%d", Constants.TOTAL_FEATURES, features);
 					}else if (i == 3){
 						i += 1;
-						return String.format("%s=%d", Constants.MAXUSERID, maxVid);
+						return String.format("%s=%d", Constants.MAXVECTORID, maxVid);
+					}else if (i == 4){
+						i += 1;
+						return String.format("%s=%.5f", Constants.AVG_WEIGHT, weightSum / features);
+					}else if (i == 5){
+						i += 1;
+						return String.format("%s=%d", Constants.MAXFEATURESIZE, maxFeatureSize);
 					}
 					return null;
 				}
@@ -172,7 +181,6 @@ public abstract class DataStatistic {
 
 		@Override
 		public Iterator<String> getStatIter() throws IOException {
-			// TODO Auto-generated method stub
 			return new Iterator<String>() {
 
 				int i = 0;
@@ -196,5 +204,7 @@ public abstract class DataStatistic {
 			};
 		}
 	}
+	
+	
 	
 }

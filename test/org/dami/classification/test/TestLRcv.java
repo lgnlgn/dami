@@ -19,26 +19,26 @@ public class TestLRcv {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 //		String db = "e:/data/rcv1";
-		String db = "d:/mu";
+		String db = "d:/a9a";
 		SGDLogisticRegression lr = new SGDLogisticRegression();
 //		BytesDataReader ds = new BytesDataReader.RAMStorage(db, vsd);
 		
 		
-//		FileVectorReader fvr = new FileVectorReader.LabelFeatureWeightBytesReader(db);
-		
-		FileVectorReader fvr = new FileVectorReader.BytesReader(db, new Vector.Status(0x10 + 0x8 + 0x4));
-		VectorStorage vs = new VectorStorage.RAMStorage(fvr);
+		FileVectorReader fvr = FileVectorReader.getBytesReaderFromSta(db);
+			
+		VectorStorage vs = new VectorStorage.RAMCompactStorage(fvr);
 		
 		
 		lr.loadData(vs);
 		
 		Properties property = new Properties();
-//		property.setProperty("-wi1", "3");
-//		property.setProperty(Constants.ALPHA, "0.0008");
-//		property.setProperty(Constants.LAMBDA, "0.0000001");
-		property.setProperty(Constants.LOOPS, "50");
+//		property.setProperty("-w1", "3");
+		property.setProperty(Constants.ALPHA, "0.05");
+//		property.setProperty(Constants.LAMBDA, "0.00001");
+//		property.setProperty(Constants.LOOPS, "50");
 //		property.setProperty(Constants.STOPCRITERIA, "0.00001");
 		lr.setProperties(property);
+		System.out.println(lr);
 //		System.out.println(lr);
 		Evaluator acc = new Evaluator.BinaryAccuracy();
 		lr.crossValidation(5, acc);

@@ -12,10 +12,10 @@ public class TestPagerank {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		Pagerank pr = new Pagerank();
+		PageRank pr = new PageRank();
 		
 		Properties p = new Properties();
-		p.setProperty(Pagerank.TMPDIR, ".");
+		p.setProperty(PageRank.TMPDIR, ".");
 		pr.setParameters(p);
 			
 		pr.loadData("e:/data/pr.ser", "e:/data/pr2.ser");

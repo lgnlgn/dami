@@ -74,6 +74,22 @@ public class Vector {
 	public int count = 1; // how many vector exactly the same.  
 	public int id = -1;   // whether has an id . if a vector has an id , it should have count=1
 	
+	/**
+	 * Fast construction
+	 * @param features
+	 * @param weights
+	 * @param id
+	 * @param label
+	 * @param count
+	 */
+	public Vector(int[] features, float[] weights, int id, int label, int count){
+		this.features = features;
+		this.weights = weights;
+		this.featureSize = features.length;
+		this.id = id;
+		this.count = count;
+		this.label = label;
+	}
 	
 	public Vector(){
 		init(DEFAULT_FEATURES);
@@ -121,15 +137,26 @@ public class Vector {
 		return sb.substring(0, sb.length()-2) + "]";
 	}
 
-	
+	/**
+	 * Status(0x8 + 0x4)
+	 * @return
+	 */
 	public static Status normalClassificationFormat(){
 		return new Status(0x8 + 0x4);
 	}
 	
+	/**
+	 * Status(0)
+	 * @return
+	 */
 	public static Status normalFIMFormat(){
 		return new Status(0);
 	}
 	
+	/**
+	 * Status(1)
+	 * @return
+	 */
 	public static Status idOnlyFormat(){
 		return new Status(1);
 	}

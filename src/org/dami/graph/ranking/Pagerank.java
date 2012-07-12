@@ -25,7 +25,7 @@ import org.dami.graph.common.Ranking;
  * @author lgn
  *
  */
-public class Pagerank implements Ranking{
+public class PageRank implements Ranking{
 
 	
 	
@@ -40,6 +40,7 @@ public class Pagerank implements Ranking{
 	
 	int nodes = 0;
 	VectorStorage dataEntry;
+	Vector sample;
 	
 	float alpha = 0.85f;
 	String tmpDir = ".";
@@ -62,12 +63,12 @@ public class Pagerank implements Ranking{
 		dataEntry = inLinkData;
 		outLinkDegreeSums = new float[maxNodeId + 1];
 		pageranks = new float[maxNodeId + 1];
-
+		sample = new Vector();
 		Arrays.fill(outLinkDegreeSums, 0);
 		Arrays.fill(pageranks, initValue);
 		
 		outLinkData.open();
-		for(Vector sample = outLinkData.next(); sample != null; sample = outLinkData.next()){
+		for(outLinkData.next(sample); sample.featureSize >= 0; outLinkData.next(sample)){
 			for(int i = 0 ; i < sample.featureSize; i++)
 				outLinkDegreeSums[sample.id] += sample.weights[i];
 		}
@@ -133,6 +134,7 @@ public class Pagerank implements Ranking{
 		long timeEnd = 0;
 		if (outLinkDegreeSums == null)
 			throw new RuntimeException("data set not loaded yet!");
+		
 		for(int l = 0 ; l < loops; l ++){
 			dataEntry.reOpenData();
 			
@@ -143,7 +145,10 @@ public class Pagerank implements Ranking{
 			
 			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(tmpDir + "/tmp"));
 			//--------- core computation-------------
-			for(Vector sample = dataEntry.next(); sample != null; sample = dataEntry.next()){
+			
+			for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
+				if (sample.featureSize == 0)
+					continue;
 //				if (outLinkDegreeSums[sample.id] <= 0) // prepare for counting nodes  
 //					outLinkDegreeSums[sample.id] = 1.0f;
 

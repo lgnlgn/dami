@@ -88,7 +88,8 @@ public class BigraphRandomizeSwapper extends RandomSwapper{
 		int maxfeatureSize = 0;
 		System.out.println("loading data~");
 		reader.open();
-		for(Vector sample = reader.next(); sample != null; sample = reader.next()){
+		Vector sample = new Vector();
+		for(reader.next(sample); sample.featureSize >= 0; reader.next(sample)){
 			for( int i = 0 ; i < sample.featureSize; i++){
 				jref.add(rowc);
 				iref.add(sample.features[i]);
@@ -101,13 +102,13 @@ public class BigraphRandomizeSwapper extends RandomSwapper{
 		reader.close();
 		System.out.println("loading data finished!  " );
 		
-		Vector row = new Vector(maxfeatureSize);
+		Vector row = sample;
 		int swaps = 0;
 		int size = itersPerLoop * loops;
 		String outPrefix = writer.getOutPrefix();
 		// starting swap & output
 		for(int i = 0 ; i < size; i++){
-			if (i % itersPerLoop == 0){
+			if (i % itersPerLoop == 0){ 
 				int k = 0; //rowid
 				writer.setOutPrefix(String.format("%s.%d%s", outPrefix, (i/itersPerLoop), outputSuffix));
 				writer.open(); // start

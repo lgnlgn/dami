@@ -1,5 +1,7 @@
 package org.dami.common.io;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.dami.common.Vector;
@@ -9,10 +11,12 @@ public class TestReader {
 
 	public static void testlineReader() throws IOException{
 		String input = "e:/data/mushrooms.txt";
+		
 		int i = 0;
 		FileVectorReader fvr = FileVectorReader.normalClassificationFormatLineReader(input);
 		fvr.open();
-		for(Vector v = fvr.next(); v!= null; v=fvr.next()){
+		Vector v = new Vector();
+		for(fvr.next(v); v.featureSize > 0; fvr.next(v)){
 			System.out.println(v);
 		}
 		fvr.close();
@@ -30,11 +34,47 @@ public class TestReader {
 		int i = 0;
 		FileVectorReader fvr = FileVectorReader.getBytesReaderFromSta(input);
 		fvr.open();
-		for(Vector v = fvr.next(); v!= null; v=fvr.next()){
+		Vector v = new Vector();
+		for(fvr.next(v); v.featureSize > 0; fvr.next(v)){
 			System.out.println(v);
 		}
 		fvr.close();
 		System.out.println(i);
+	}
+	
+	public static void testClassifyReader() throws IOException{
+		Vector v = new Vector();
+		FileVectorReader r1 = FileVectorReader.normalClassificationFormatLineReader("e:/data/mushrooms.txt");
+		BufferedWriter bw = new BufferedWriter(new FileWriter("d:/muv.txt"));
+		r1.open();
+		for(r1.next(v); v.featureSize >= 0; r1.next(v)){
+			bw.write(v.label + " ");
+			for(int i = 0 ; i < v.featureSize; i++){
+				bw.write(String.format("%d:%.0f ", v.features[i], v.weights[i]));
+			}
+			bw.write("\n");
+		}
+		r1.close();
+		bw.close();
+	}
+	
+	public static void testStorage()throws IOException{
+		Vector v = new Vector();
+//		FileVectorReader r1 = FileVectorReader.normalClassificationFormatLineReader("d:/mu");
+		FileVectorReader r1 = FileVectorReader.getBytesReaderFromSta("d:/mu");
+		BufferedWriter bw = new BufferedWriter(new FileWriter("d:/muv.txt"));
+		r1.open();
+		VectorStorage vs = new VectorStorage.RAMCompactStorage(r1);
+		vs.reOpenData();
+		for(vs.next(v); v.featureSize >= 0; vs.next(v)){
+			bw.write(v.label + " ");
+			for(int i = 0 ; i < v.featureSize; i++){
+				bw.write(String.format("%d:%.0f ", v.features[i], v.weights[i]));
+			}
+			bw.write("\n");
+		}
+		vs.close();
+		bw.close();
 	}
 	
 	
@@ -45,7 +85,9 @@ public class TestReader {
 	 */
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		// TODO Auto-generated method stub
-		testIdReader();
+//		testIdReader();
+//		testClassifyReader();
+		testStorage();
 	}	
 
 }
