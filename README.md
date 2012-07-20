@@ -9,6 +9,8 @@ dami is writen in Java. Our goal is to make algorithms that can handle hundreds 
 
 Currently we have : 
 
+- **utility**: Asynchronous vector buffer, High performance  and simple text parser. *More tests needs*
+
 - **classification**: 
 SGD for logistic regressions
 	
@@ -23,20 +25,26 @@ SGD for logistic regressions
 
 Future:
 
-- **IO**:
-	Buffered vector reader, High performance text parser
 
 - **similarity**:
     simhash 
 
 
-*2012/7/12 Release Notes:*
+---------
 
+>*2012/7/20 Release Notes:*
 
+> - Asynchronous vector buffer for dataset IO 
 
->code refactoring for recommendation and IO
+> - High performance and simple text parser(only for digital related chars)
 
->To run RMSE for recommendation, you first need to see *`movielens_convert.py`* for converting and/or splitting movielens data, and see *`CFDataConverter`* and *`TestSVD`*
+> - small refactoring.
+
+>*2012/7/12 Release Notes:*
+
+> - code refactoring for recommendation and IO
+
+> - To run RMSE for recommendation, you first need to see *`movielens_convert.py`* for converting and/or splitting movielens data, and see *`CFDataConverter`* and *`TestSVD`*
 
 ----------
 To achieve computation efficiency and memory utilization, two ways we have just adopted.
