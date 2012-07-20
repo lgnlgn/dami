@@ -49,11 +49,11 @@ Future:
 ----------
 To achieve computation efficiency and memory utilization, two ways we have just adopted.
  
-> 1: Using "id" as index of array for fetching data.
-> 
-> 2: Only maintaining model in memory and saving data to converted bytes for IO
+*1: Using "id" as index of array for fetching data.*
 
-So it's highly recommemded you use continuous ids for computation :)
+*2: Only maintaining model in memory and saving data to converted bytes for IO*
+
+So it's highly recommemded you use continuous ids for the algorithms :)
 
 My Chinese blog : [http://blog.csdn.net/lgnlgn](http://blog.csdn.net/lgnlgn)      
 E-mail : gnliang10 [at] 126.com
