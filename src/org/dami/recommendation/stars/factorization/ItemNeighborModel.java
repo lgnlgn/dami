@@ -9,7 +9,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Properties;
 
-import org.dami.common.Constants;
 import org.dami.common.Utilities;
 
 import org.dami.recommendation.common.RatingInfo;

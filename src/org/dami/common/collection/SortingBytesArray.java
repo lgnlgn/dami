@@ -1,17 +1,15 @@
 package org.dami.common.collection;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.StringTokenizer;
 
 import org.dami.common.Utilities;
+import org.dami.common.io.FileBytesReader;
 
 
 public class SortingBytesArray{
@@ -22,15 +20,16 @@ public class SortingBytesArray{
 	StringTokenizer st;
 	String aggColumnString;
 	
+	NumericTokenizer dt;
+	
 	public static class SortCmp implements Comparator<byte[]>{
 
-		private int flag = 1;
+		private boolean reverse = true;
 		
 		public SortCmp(boolean reverse){
-			if (reverse)
-				flag = -1;
-			else
-				flag = 1;
+
+			this.reverse = reverse;
+
 		}
 		
 		
@@ -38,12 +37,23 @@ public class SortingBytesArray{
 		public int compare(byte[] o1, byte[] o2) {
 			int v1 = (((int)o1[0] & 0xff) << 24) | (((int)o1[1] & 0xff) << 16) | (((int)o1[2] & 0xff) << 8) | ((int)o1[3] & 0xff);
 			int v2 = (((int)o2[0] & 0xff) << 24) | (((int)o2[1] & 0xff) << 16) | (((int)o2[2] & 0xff) << 8) | ((int)o2[3] & 0xff);
-			if (v1 < v2)
-				return -1 * flag;
-			else if (v1 ==v2)
-				return 0;
-			else 
-				return 1 * flag;
+//			System.out.print("*");
+			if (reverse){
+				if (v1 < v2)
+					return 1 ;
+				else if (v1 ==v2)
+					return 0;
+				else 
+					return -1 ;
+			}else{
+				if (v1 < v2)
+					return -1;
+				else if (v1 ==v2)
+					return 0;
+				else 
+					return 1;
+			}
+
 		}
 		
 	}
@@ -54,7 +64,7 @@ public class SortingBytesArray{
 	public SortingBytesArray(){
 		this(null);
 	}
-	
+	/*
 	public void add(String line, int aggColumn){
 		if (currentIndex >= storage.length){
 			byte[][] newstore = new byte[Math.min(storage.length * 3 / 2 + 1, storage.length + MAX_ENLARGE_SIZE)][];
@@ -79,6 +89,27 @@ public class SortingBytesArray{
 		}else{
 			throw new IllegalArgumentException("Aggregate column is OUT OF line column");
 		}
+	}
+	*/
+	
+	public void add(ByteArray line, int aggColumn){
+		if (currentIndex >= storage.length){
+			byte[][] newstore = new byte[Math.min(storage.length * 3 / 2 + 1, storage.length + MAX_ENLARGE_SIZE)][];
+			System.arraycopy(storage, 0, newstore, 0, storage.length);
+			storage = newstore;
+		}
+		if (dt == null){
+			dt = new NumericTokenizer();
+		}
+		dt.load(line);
+		Object aggc = null;
+		for(int i = 0 ; i < aggColumn; i++)
+			aggc = dt.nextNumber();
+
+		byte[] toStore = new byte[line.size() + 4];
+		System.arraycopy(Utilities.int2outputbytes((Integer)aggc), 0, toStore, 0, 4);
+		System.arraycopy(line.array, line.startIdx, toStore, 4, line.size());
+		storage[currentIndex++] = toStore;
 	}
 	
 	public void sort(boolean reverse){
@@ -117,14 +148,31 @@ public class SortingBytesArray{
 		return sb.toString();
 	}
 	
+	/*
 	public void readIn(File input, int aggColumn) throws IOException{
 		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(input)));
 		for(String line = br.readLine(); line != null; line = br.readLine()){
 			this.add(line, aggColumn);
 		}
-		br.read();
+		br.close();
+	}
+	*/
+	public void readIn(File input, int aggColumn) throws IOException{
+		FileBytesReader br = new FileBytesReader(input.getAbsolutePath());
+//		int l =0;
+		for(ByteArray line = br.readLine(); line != null; line = br.readLine()){
+			this.add(line, aggColumn);
+			
+//			l ++;
+//			if (l%1000000 ==0){
+//				System.out.print("!");
+//			}
+		}
+//		System.out.println("finish");
+		br.close();
 	}
 	
+	/*
 	public void writeOut(String output , boolean append) throws IOException{
 		BufferedWriter bw = new BufferedWriter(new FileWriter(output, append));
 		for( int i = 0 ; i < currentIndex ; i ++){
@@ -132,9 +180,19 @@ public class SortingBytesArray{
 		}
 		bw.close();
 	}
+	*/
+	
+	public void writeOut(String output, boolean append) throws IOException{
+		BufferedOutputStream bos = new BufferedOutputStream(new  FileOutputStream(output, append));
+		for(int i = 0 ; i <currentIndex; i++){
+			bos.write(storage[i], 4 , storage[i].length -4);
+		}
+		bos.close();
+	}
+	
 
 	public void clear(){
-//		storage = new byte[1000][];
+		storage = new byte[1000][];
 		currentIndex = 0;
 	}
 	
@@ -145,7 +203,7 @@ public class SortingBytesArray{
 //		sba.readIn("e:/data/g.txt", 2);
 		System.out.println(System.currentTimeMillis() - t);
 		sba.sort();
-		System.out.println(sba);
+//		System.out.println(sba);
 	}
 
 }

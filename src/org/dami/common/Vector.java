@@ -129,8 +129,8 @@ public class Vector {
 	
 
 	public String toString(){
-		StringBuilder sb = new StringBuilder(String.format("id:%d\tlabel:%d count:%d  (%d)[", 
-				id, label, count, featureSize));
+		StringBuilder sb = new StringBuilder(String.format("id:%d\tcount:%d label:%d  (%d)[", 
+				id, count, label, featureSize));
 		for(int i = 0; i < featureSize; i++){
 			sb.append(String.format("%d:%.3f", this.features[i], this.weights[i]) + ", ");
 		}

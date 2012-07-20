@@ -14,6 +14,7 @@ import org.dami.classification.common.Evaluator;
 import org.dami.common.Constants;
 import org.dami.common.Vector;
 import org.dami.common.Utilities;
+import org.dami.common.VectorPool;
 import org.dami.common.io.DataReader;
 import org.dami.common.io.VectorStorage;
 
@@ -22,6 +23,8 @@ public class SGDLogisticRegression implements Classifier{
 	
 	final static double initWeight = 0;
 	final static int LABELRANGEBASE = 32768;
+	
+	VectorPool pool = null;
 	
 	public double[] featureWeights = null;
 	
@@ -80,6 +83,8 @@ public class SGDLogisticRegression implements Classifier{
 	private void init(){
 		featureWeights = new double[maxFeatureId + 1];
 		Arrays.fill(featureWeights, initWeight);
+		pool = new VectorPool(dataEntry);
+//		System.out.println("ok");
 	}
 	
 	private double gradientDescend(Vector sample){
@@ -114,7 +119,9 @@ public class SGDLogisticRegression implements Classifier{
 		for(int l = 0 ; l < Math.min(10, loops) || l < loops && (Math.abs(1- avge/ lastAVGE) > stop || Math.abs(1- corrects/ lastCorrects) > stop * 0.1); l++){
 			lastAVGE = avge;
 			lastCorrects = corrects;
-			dataEntry.reOpenData();
+//			dataEntry.reOpenData();
+			pool.open();
+//			System.out.println("----");
 			long timeStart = System.currentTimeMillis();
 			
 			int c =1; //for n-fold cv
@@ -122,9 +129,9 @@ public class SGDLogisticRegression implements Classifier{
 			double sume = 0;
 			corrects = 0;
 			int cc = 0;
-			
-			
-			for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
+
+			for(sample = pool.get(); sample != null; sample = pool.get()){
+//			for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
 				if (c % fold == remain){ // no train
 					;
 				}else{ //train
@@ -146,6 +153,7 @@ public class SGDLogisticRegression implements Classifier{
 					}
 				}
 				c += 1;
+				pool.takeBack();
 			}
 
 			avge = sume / cc;
@@ -164,12 +172,8 @@ public class SGDLogisticRegression implements Classifier{
 					if (lambda < minLambda)
 						lambda = minLambda;
 				}
-//				if (alphaSetted && !lambdaSetted && lambda < alpha * (minLambda/minAlpha)){
-//					lambda = alpha * (minLambda/minAlpha);
-//				}else if (!alphaSetted && lambdaSetted && alpha < lambda * (minAlpha / minLambda)){
-//					alpha = lambda * (minAlpha / minLambda);
-//				}
 			}
+			pool.close();
 			System.out.println(String.format("#%d loop%d\ttime:%d(ms)\tacc: %.3f(approx)\tavg_error:%.6f", cc, l, (timeEnd - timeStart), acc , avge));
 		}
 		

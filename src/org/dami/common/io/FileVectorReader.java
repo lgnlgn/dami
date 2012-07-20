@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -15,6 +14,8 @@ import java.util.StringTokenizer;
 import org.dami.common.Constants;
 import org.dami.common.Utilities;
 import org.dami.common.Vector;
+import org.dami.common.collection.ByteArray;
+import org.dami.common.collection.NumericTokenizer;
 
 /**
  * Reads vector from file, either text or bytes. Parsing logic must be embedded in.
@@ -26,7 +27,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 
 	protected FileInputStream fis = null;
 	protected BufferedInputStream istream = null;
-//	Vector sample = new Vector();
+	//	Vector sample = new Vector();
 	protected String filePath ;
 	ByteBuffer  buff;
 
@@ -96,7 +97,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 			if (aggIdx > 1 || aggIdx < 0){
 				throw new IllegalArgumentException("Parameter error! index for aggregate id MUST BE 0 OR 1");
 			}
-//			sample = new Vector(MAXFEATURES);
+			//			sample = new Vector(MAXFEATURES);
 			this.aggIdx = aggIdx;
 			this.weightColumn = weightColumn;
 			this.delim = delimRegex;
@@ -172,7 +173,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 					sample.featureSize = currentIdx;
 					currentIdx = 0;
 					return;
-//					return sample;
+					//					return sample;
 				}
 				//otherwise 
 				lastId = (Integer)currentInfo[aggIdx];
@@ -181,7 +182,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 					sample.id = lastId;
 					sample.featureSize = currentIdx;
 					currentIdx = 0;
-//					return sample;
+					//					return sample;
 				}
 				fillVector(sample);
 				currentIdx += 1;
@@ -192,7 +193,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 			sample.featureSize = currentIdx;
 			currentIdx = 0;
 			stopped = true;
-//			return sample;
+			//			return sample;
 		}
 
 	}
@@ -242,7 +243,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 			int index = 4;
 			if (bytes < 0){ //EOF
 				sample.featureSize = -1;
-//				return;
+				//				return;
 			}else{
 				buff = ByteBuffer.wrap(tmpbytes);
 				sample.featureSize = buff.getInt(0);
@@ -298,7 +299,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 				}
 
 			}
-//			return sample;
+			//			return sample;
 		}
 
 	}
@@ -355,43 +356,118 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 			String line = br.readLine();
 			if (line == null){
 				sample.featureSize = -1;
-//				return null;
+				//				return null;
 				return;
 			}
-			StringTokenizer st = new StringTokenizer(line, this.delim);
+			if (line.isEmpty()){
+				next(sample);
+			}else{
+				StringTokenizer st = new StringTokenizer(line, this.delim);
+				if (vectorStatus.hasId){
+					sample.id = Integer.parseInt(st.nextToken());
+				}
+				if (vectorStatus.hasCount){
+					sample.count = Integer.parseInt(st.nextToken());
+				}
+				if (vectorStatus.hasLabel){
+					String labelStr = st.nextToken();
+					// label = +1 +2 ....
+					sample.label = Integer.parseInt(labelStr.startsWith("+") ? labelStr.substring(1) : labelStr); 
+				}
+				int i = 0;
+				int idx = 0;
+				// if no features are to read, 
+				// while loop will not be entered because of the StringTokenizer.hasMoreTokens
+				while(st.hasMoreTokens()){
+					if (i+1 >= sample.capacity())
+						sample.enlarge();
+					String featureInfo = st.nextToken();
+					if (vectorStatus.hasWeight){
+						idx = featureInfo.indexOf(kvSplit);
+						sample.features[i] = Integer.parseInt(featureInfo.substring(0,idx));
+						sample.weights[i]= Float.parseFloat(featureInfo.substring(idx+1));
+					}else{
+						sample.features[i] = Integer.parseInt(featureInfo);
+					}
+					i++;
+				}
+				sample.featureSize = i;
+				//			return sample;
+			}
+		}
+
+	}
+
+	public static class FastLineReader extends FileVectorReader{
+		String delim;
+		String kvSplit;
+
+		FileBytesReader br;
+		NumericTokenizer nt;
+
+		/**
+		 * non-digit chars as split
+		 * @param filePath
+		 * @param vs
+		 */
+		public FastLineReader(String filePath, Vector.Status vs){
+			this.filePath = filePath;
+			this.setVectorParameter(vs);
+			nt = new NumericTokenizer();
+		}
+
+
+		@Override
+		public void open() throws IOException {
+			br = new FileBytesReader(filePath);
+		}
+
+		@Override
+		public void close() throws IOException {
+			br.close();
+		}
+
+		@Override
+		public void next(Vector sample) throws IOException {
+
+			ByteArray line = br.readLine();
+			if (line == null){
+				sample.featureSize = -1;
+				//				return null;
+				return;
+			}
+
+			nt.load(line);
 			if (vectorStatus.hasId){
-				sample.id = Integer.parseInt(st.nextToken());
+				sample.id = (Integer)(nt.nextNumber());
 			}
 			if (vectorStatus.hasCount){
-				sample.count = Integer.parseInt(st.nextToken());
+				sample.count = (Integer)(nt.nextNumber());
 			}
 			if (vectorStatus.hasLabel){
-				String labelStr = st.nextToken();
-				// label = +1 +2 ....
-				sample.label = Integer.parseInt(labelStr.startsWith("+") ? labelStr.substring(1) : labelStr); 
+				sample.label = (Integer)(nt.nextNumber());
 			}
 			int i = 0;
-			int idx = 0;
-			// if no features are to read, 
-			// while loop will not be entered because of the StringTokenizer.hasMoreTokens
-			while(st.hasMoreTokens()){
+			long kv = 0;
+
+			while(nt.hasNext()){
 				if (i+1 >= sample.capacity())
 					sample.enlarge();
-				String featureInfo = st.nextToken();
 				if (vectorStatus.hasWeight){
-					idx = featureInfo.indexOf(kvSplit);
-					sample.features[i] = Integer.parseInt(featureInfo.substring(0,idx));
-					sample.weights[i]= Float.parseFloat(featureInfo.substring(idx+1));
+					kv = nt.nextKeyValuePair();
+					sample.features[i] = NumericTokenizer.extractFeatureId(kv);
+					sample.weights[i]= NumericTokenizer.extractWeight(kv);
 				}else{
-					sample.features[i] = Integer.parseInt(featureInfo);
+					sample.features[i] = (Integer)(nt.nextNumber());
 				}
 				i++;
 			}
 			sample.featureSize = i;
-//			return sample;
+
 		}
 
 	}
+
 
 	/**
 	 * libsvm format 
@@ -444,6 +520,7 @@ public abstract class FileVectorReader implements DataReader<Vector>{
 		prop.load(r);
 		r.close();
 		try{
+			//TODO @SuppressWarnings("unchecked")?
 			//			@SuppressWarnings("unchecked")
 			Class<BytesReader> clz = (Class<BytesReader>) Class.forName(prop.getProperty(Constants.DATADESERIALIZER));
 			Constructor<FileVectorReader.BytesReader> constructor = clz.getConstructor(String.class, Vector.Status.class);

@@ -9,7 +9,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Properties;
 
-import javax.rmi.CORBA.Util;
 
 import org.dami.common.Constants;
 import org.dami.common.Utilities;

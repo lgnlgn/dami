@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import org.dami.common.Constants;
 import org.dami.common.Utilities;
 import org.dami.recommendation.common.RatingInfo;
 import org.dami.recommendation.common.UserRatings;

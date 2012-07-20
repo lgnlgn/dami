@@ -1,13 +1,14 @@
 package org.dami.common.io;
 
-import java.io.BufferedReader;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.StringTokenizer;
 
+import org.dami.common.collection.ByteArray;
+import org.dami.common.collection.NumericTokenizer;
 import org.dami.common.collection.SortingBytesArray;
 
 /**
@@ -19,13 +20,16 @@ import org.dami.common.collection.SortingBytesArray;
  */
 public class TupleAggregator {
 
+	
+/*	
 	public void splitData(String filePath,  int aggColumn, String outPrefix, int blocks) throws NumberFormatException, IOException{
 		long t = System.currentTimeMillis();
 		BufferedReader br = new BufferedReader(new FileReader(filePath));
 		BufferedWriter[] bws = new BufferedWriter[blocks];
 		for(int i = 0 ; i < blocks; i++){
-			bws[i] = new BufferedWriter(new FileWriter(outPrefix + "." + i));
+			bws[i] = new BufferedWriter(new FileWriter(outPrefix + "." + i), 1024 * 1024 * 10);
 		}
+		int l = 0;
 		for(String line = br.readLine(); line != null; line = br.readLine()){
 			StringTokenizer st = new StringTokenizer(line);
 			String a = null;
@@ -34,10 +38,54 @@ public class TupleAggregator {
 			int value = Integer.parseInt(a);
 			BufferedWriter bw = bws[value % blocks];
 			bw.write(line + "\n");
-//			l ++;
-//			if (l % 1000000 == 0){
-//				System.out.print("!");
+			l ++;
+			if (l % 1000000 == 0){
+				System.out.print("!");
+			}
+		}
+		br.close();
+		for(int i = 0 ; i < blocks; i ++){
+			bws[i].flush();
+			bws[i].close();
+		}
+		long t2 = System.currentTimeMillis();
+		System.out.println("time spend(ms) : " + (t2 -t));
+		
+	}
+	*/
+	public void splitData(String filePath,  int aggColumn, String outPrefix, int blocks) throws NumberFormatException, IOException{
+		long t = System.currentTimeMillis();
+		FileBytesReader br = new FileBytesReader(filePath);
+		BufferedOutputStream[] bws = new BufferedOutputStream[blocks];
+		for(int i = 0 ; i < blocks; i++){
+			bws[i] = new BufferedOutputStream(new FileOutputStream(outPrefix + "." + i), 1024 * 1024 * 300 / blocks);
+		}
+		NumericTokenizer dt = new NumericTokenizer();
+		int l = 0;
+		for(ByteArray line = br.readLine(); line != null; line = br.readLine()){
+			dt.load(line);
+//			System.out.print(line);
+			Object aggc = null;
+			for(int i = 0 ; i < aggColumn; i++){
+				aggc = dt.nextNumber();
+			}
+//			try{
+			if (aggc != null){
+				int value = (Integer)aggc;
+				BufferedOutputStream bw = bws[value % blocks];
+				bw.write(line.array, line.startIdx, line.size());
+//				bw.write(line.toString().getBytes());
+			}else{
+				System.out.println(line);
+			}
+//			}catch (NullPointerException e){
+//				System.out.println(line.toString());
 //			}
+
+			l ++;
+			if (l % 1000000 == 0){
+				System.out.print("!");
+			}
 		}
 		br.close();
 		for(int i = 0 ; i < blocks; i ++){
@@ -79,7 +127,7 @@ public class TupleAggregator {
 		long t = System.currentTimeMillis();
 		File tmpDir = new File( output + "." + t);
 		long fileSize = new File(input).length();
-		long blocks = fileSize / 220000000;
+		long blocks = fileSize / 200000000;
 		if (blocks > 0){
 			if (!tmpDir.mkdir())
 				throw new IOException("<DIRECTORY PATH> of the file output path  " + output+ " IS NOT EXIST !" );

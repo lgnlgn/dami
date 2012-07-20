@@ -2,7 +2,6 @@ package org.dami.recommendation.common;
 
 import org.dami.common.Constants;
 import org.dami.common.Utilities;
-import org.dami.common.io.VectorStorage;
 
 import org.dami.recommendation.common.RatingInfo;
 import org.dami.recommendation.common.Recommender;

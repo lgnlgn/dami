@@ -20,6 +20,10 @@ public abstract class VectorStorage implements DataReader<Vector>{
 	protected Properties dataStatus;
 	protected FileVectorReader reader ;
 	
+	public Vector.Status getVectorStatus(){
+		return reader.vectorStatus;
+	}
+	
 	public interface RandomAccess{
 		public void getVectorById(Vector sample, int id) throws IOException;
 	}
@@ -69,7 +73,7 @@ public abstract class VectorStorage implements DataReader<Vector>{
 		}
 
 		@Override
-		public synchronized void next(Vector sample) throws IOException {
+		public void next(Vector sample) throws IOException {
 			reader.next(sample);
 		}
 		
@@ -108,6 +112,7 @@ public abstract class VectorStorage implements DataReader<Vector>{
 				xids = new int[samples];
 			
 			reader.open();
+			
 			for(reader.next(current); current.featureSize >= 0; reader.next(current)){
 				x[currentIdx] = new int[current.featureSize];
 				if (vs.hasWeight){
@@ -143,7 +148,7 @@ public abstract class VectorStorage implements DataReader<Vector>{
 		}
 
 		@Override
-		public synchronized void next(Vector sample) throws IOException {
+		public void next(Vector sample) throws IOException {
 			if (currentIdx >= this.xlabels.length){
 				sample.featureSize = -1;
 				return ;

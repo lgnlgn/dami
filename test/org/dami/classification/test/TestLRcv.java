@@ -19,21 +19,21 @@ public class TestLRcv {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 //		String db = "e:/data/rcv1";
-		String db = "d:/a9a";
+		String db = "d:/real-sim";
 		SGDLogisticRegression lr = new SGDLogisticRegression();
 //		BytesDataReader ds = new BytesDataReader.RAMStorage(db, vsd);
 		
 		
 		FileVectorReader fvr = FileVectorReader.getBytesReaderFromSta(db);
 			
-		VectorStorage vs = new VectorStorage.RAMCompactStorage(fvr);
+		VectorStorage vs = new VectorStorage.FileStorage(fvr);
 		
 		
 		lr.loadData(vs);
 		
 		Properties property = new Properties();
 //		property.setProperty("-w1", "3");
-		property.setProperty(Constants.ALPHA, "0.05");
+//		property.setProperty(Constants.ALPHA, "0.05");
 //		property.setProperty(Constants.LAMBDA, "0.00001");
 //		property.setProperty(Constants.LOOPS, "50");
 //		property.setProperty(Constants.STOPCRITERIA, "0.00001");

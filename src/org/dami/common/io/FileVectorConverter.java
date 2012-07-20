@@ -86,17 +86,19 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 		reader.open();
 		writer.open();
 		Vector sample = new Vector(initVectorSize);
-		for(reader.next(sample); sample.featureSize > 0;  reader.next(sample)){ //parsed
+		long t = System.currentTimeMillis();
+		for(reader.next(sample); sample.featureSize >= 0;  reader.next(sample)){ //parsed
 			
 			if (sample.featureSize == 0)
 				continue;
-			
+
 			writer.write(sample);
 			
 			if (dsl.toStat()){
 				dsl.collect(sample);
 			}
 		}
+		long t2 = System.currentTimeMillis();
 		reader.close();
 		writer.close();
 		
@@ -107,6 +109,7 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 		bw.write(String.format("%s=%d" + Constants.ENDL, Constants.VESTOC_STATUS, 
 				((FileVectorWriter)this.writer).getVectorStatus().getVectorParameter()));
 		bw.close();
+		System.out.println("time(ms) : " +(t2 -t));
 	}
 	
 	@Override
@@ -128,6 +131,13 @@ public class FileVectorConverter extends DataConverter<Vector, Vector>{
 				new DataStatistic.CommonStatistic(), new DataStatistic.LabelStatistic());
 	}
 
+	public static FileVectorConverter classificationFormatFastConverter(String filePath, String outPrefix){
+		FileVectorReader reader = new FileVectorReader.FastLineReader(filePath, Vector.normalClassificationFormat());
+		FileVectorWriter writer = new FileVectorWriter.BytesWriter(outPrefix,  Vector.normalClassificationFormat());
+		
+		return new FileVectorConverter(reader, writer, 
+				new DataStatistic.CommonStatistic(), new DataStatistic.LabelStatistic());
+	}
 	
 	/**
 	 * you must make sure the file input is ordered by the aggregate column

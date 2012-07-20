@@ -3,7 +3,6 @@ package org.dami.recommendation.common;
 import java.io.IOException;
 
 import org.dami.common.DataStatistic;
-import org.dami.common.Utilities;
 import org.dami.common.Vector;
 import org.dami.common.io.FileVectorConverter;
 import org.dami.common.io.FileVectorReader;
