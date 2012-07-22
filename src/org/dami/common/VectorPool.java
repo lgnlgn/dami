@@ -135,7 +135,6 @@ public class VectorPool implements Runnable{
 						// that is : readingIdx assigned to 0 by the writer
 						break;
 					}
-					
 				}
 			}
 		}
@@ -167,9 +166,7 @@ public class VectorPool implements Runnable{
 		if (writingfinished){
 			finished = true;
 		}
-		
 	}
-
 
 
 	public synchronized void takeBack(){
@@ -197,12 +194,6 @@ public class VectorPool implements Runnable{
 		}
 	}
 	
-	private void swapVectorInBuffer(int i, int j){
-		Vector s = writingBuffer[i];
-		writingBuffer[i] = writingBuffer[j];
-		writingBuffer[j] = s;
-	}
-	
 	
 	private void fillBuffer() throws IOException{
 		Vector tmp = writingBuffer[0];  //largest vector pointer
@@ -211,7 +202,7 @@ public class VectorPool implements Runnable{
 			source.next(tmp);
 			if (tmp.featureSize == -1){ // meets the end while not fulfilled yet
 				i -= 1;
-				swapVectorInBuffer(0, i);
+				fillVector(0, writingBuffer[i]); 
 				writingfinished = true;
 				break;
 			}
@@ -225,7 +216,7 @@ public class VectorPool implements Runnable{
 			source.next(tmp);
 			if (tmp.featureSize == -1){ 
 				i -= 1;
-				swapVectorInBuffer(0, i);
+				fillVector(0, writingBuffer[i]);
 				writingfinished = true;
 			}else{
 				;

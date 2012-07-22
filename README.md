@@ -32,7 +32,7 @@ Future:
 
 ---------
 
->*2012/7/20 Release Notes:*
+>*2012/7/22 Release Notes:*
 
 > - Asynchronous vector buffer for dataset IO 
 
