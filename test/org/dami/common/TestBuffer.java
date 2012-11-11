@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.*;
 
 public class TestBuffer {
 
