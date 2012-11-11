@@ -12,6 +12,7 @@ import java.util.Properties;
 import org.dami.classification.common.Classifier;
 import org.dami.classification.common.Evaluator;
 import org.dami.common.Constants;
+import org.dami.common.MemoryEstimater;
 import org.dami.common.Vector;
 import org.dami.common.Utilities;
 import org.dami.common.VectorPool;
@@ -19,21 +20,24 @@ import org.dami.common.io.DataReader;
 import org.dami.common.io.VectorStorage;
 
 
-public class SGDLogisticRegression implements Classifier{
+public class SGDLogisticRegression implements Classifier, MemoryEstimater{
 	
 	final static double initWeight = 0;
 	final static int LABELRANGEBASE = 32768;
-	
-	VectorPool pool = null;
+	public final static double DEFAULT_STOP = 0.001;
+	public final static int DEFAULT_LOOPS = 30;
 	
 	public double[] featureWeights = null;
 	
 	protected VectorStorage dataEntry= null;
-	protected int[][] dataInfo = null;
-//	protected int[] labels = null;
+	VectorPool pool = null;
+	boolean usePool = false;
 	
-	protected Double alpha = null;
-	protected Double lambda = null;
+	protected int[][] dataInfo = null;
+	
+	
+	protected Double alpha = null; // learning speed
+	protected Double lambda = null;// regularization
 	protected Double stop = null;
 	private boolean alphaSetted = false;
 	private boolean lambdaSetted = false;
@@ -42,7 +46,7 @@ public class SGDLogisticRegression implements Classifier{
 	protected double minAlpha = 0.00001;
 	protected double minLambda = 0.00000001;
 	
-	protected Integer loops = 30;
+	protected Integer loops = DEFAULT_LOOPS;
 	protected int fold = 5;
 	
 	protected int samples = 0; 
@@ -59,7 +63,7 @@ public class SGDLogisticRegression implements Classifier{
 	public void loadData(VectorStorage data) throws Exception {
 		dataEntry = data;
 		if (this.dataEntry.getDataSetInfo() == null){
-			maxFeatureId = 65535;
+			throw new RuntimeException("dataEntry must be set!");
 		}else{
 			maxFeatureId = Utilities.getIntFromProperties(dataEntry.getDataSetInfo(), Constants.MAXFEATUREID);
 					
@@ -83,8 +87,9 @@ public class SGDLogisticRegression implements Classifier{
 	private void init(){
 		featureWeights = new double[maxFeatureId + 1];
 		Arrays.fill(featureWeights, initWeight);
-		pool = new VectorPool(dataEntry);
-//		System.out.println("ok");
+		if (dataEntry instanceof VectorStorage.FileStorage)
+			pool = new VectorPool(dataEntry);
+
 	}
 	
 	private double gradientDescend(Vector sample){
@@ -119,9 +124,11 @@ public class SGDLogisticRegression implements Classifier{
 		for(int l = 0 ; l < Math.min(10, loops) || l < loops && (Math.abs(1- avge/ lastAVGE) > stop || Math.abs(1- corrects/ lastCorrects) > stop * 0.1); l++){
 			lastAVGE = avge;
 			lastCorrects = corrects;
-//			dataEntry.reOpenData();
-			pool.open();
-//			System.out.println("----");
+			if (dataEntry instanceof VectorStorage.FileStorage)
+				pool.open();
+			else
+				dataEntry.reOpenData();
+
 			long timeStart = System.currentTimeMillis();
 			
 			int c =1; //for n-fold cv
@@ -130,32 +137,60 @@ public class SGDLogisticRegression implements Classifier{
 			corrects = 0;
 			int cc = 0;
 
-			for(sample = pool.get(); sample != null; sample = pool.get()){
-//			for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
-				if (c % fold == remain){ // no train
-					;
-				}else{ //train
-					if ( sample.label == this.biasLabel){ //bias; sequentially compute #(bias - 1) times
-						for(int bw = 1 ; bw < this.biasWeightRound; bw++){ //bias
-							for(int i = 0 ; i < sample.count; i++)
-								this.gradientDescend(sample);
+			if (dataEntry instanceof VectorStorage.FileStorage){ 
+				for(sample = pool.get(); sample != null; sample = pool.get()){
+					if (c % fold == remain){ // no train
+						;
+					}else{ //train
+						if ( sample.label == this.biasLabel){ //bias; sequentially compute #(bias - 1) times
+							for(int bw = 1 ; bw < this.biasWeightRound; bw++){ //bias
+								for(int i = 0 ; i < sample.count; i++)
+									this.gradientDescend(sample);
+							}
+						}
+						for(int i = 0 ; i < sample.count; i++){
+							error = gradientDescend(sample);
+							if (Math.abs(error) < 0.5)//accuracy
+								if ( sample.label == this.biasLabel)
+									corrects += this.biasWeightRound;
+								else
+									corrects += 1; 
+							cc += 1;
+							sume += Math.abs(error);
 						}
 					}
-					for(int i = 0 ; i < sample.count; i++){
-						error = gradientDescend(sample);
-						if (Math.abs(error) < 0.5)//accuracy
-							if ( sample.label == this.biasLabel)
-								corrects += this.biasWeightRound;
-							else
-								corrects += 1; 
-						cc += 1;
-						sume += Math.abs(error);
-					}
+					c += 1;
+					pool.takeBack();
 				}
-				c += 1;
-				pool.takeBack();
+				pool.close();
 			}
-
+			else{
+				for(dataEntry.next(sample); sample.featureSize >= 0; dataEntry.next(sample)){
+					if (c % fold == remain){ // no train
+						;
+					}else{ //train
+						if ( sample.label == this.biasLabel){ //bias; sequentially compute #(bias - 1) times
+							for(int bw = 1 ; bw < this.biasWeightRound; bw++){ //bias
+								for(int i = 0 ; i < sample.count; i++)
+									this.gradientDescend(sample);
+							}
+						}
+						for(int i = 0 ; i < sample.count; i++){
+							error = gradientDescend(sample);
+							if (Math.abs(error) < 0.5)//accuracy
+								if ( sample.label == this.biasLabel)
+									corrects += this.biasWeightRound;
+								else
+									corrects += 1; 
+							cc += 1;
+							sume += Math.abs(error);
+						}
+					}
+					c += 1;
+				}
+				
+			}
+			
 			avge = sume / cc;
 			
 			long timeEnd = System.currentTimeMillis();
@@ -173,12 +208,10 @@ public class SGDLogisticRegression implements Classifier{
 						lambda = minLambda;
 				}
 			}
-			pool.close();
 			System.out.println(String.format("#%d loop%d\ttime:%d(ms)\tacc: %.3f(approx)\tavg_error:%.6f", cc, l, (timeEnd - timeStart), acc , avge));
 		}
 		
 	}
-
 
 
 	public void saveModel(String filePath) throws Exception {		
@@ -254,7 +287,7 @@ public class SGDLogisticRegression implements Classifier{
 				minLambda = 0.000001;
 			}
 			if (this.stop == null){
-				stop = 0.001;
+				stop = DEFAULT_STOP;
 			}
 		}catch(NullPointerException e){
 			// loading model
@@ -301,7 +334,10 @@ public class SGDLogisticRegression implements Classifier{
 			this.lambda = Utilities.getDoubleFromProperties(prop, Constants.LAMBDA);
 			lambdaSetted = true;
 		}
-
+		if (prop.getProperty(Constants.STOPCRITERIA) != null){
+			stop = Utilities.getDoubleFromProperties(prop, Constants.STOPCRITERIA);
+		}
+		
 		
 		for(Entry<Object, Object> entry : prop.entrySet()){
 			String  key= entry.getKey().toString();
@@ -361,7 +397,26 @@ public class SGDLogisticRegression implements Classifier{
 
 	@Override
 	public Properties getProperties() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public int estimate(Properties dataStatus, Properties parameters) {
+		// TODO Auto-generated method stub
+		int maxFeatureId = Utilities.getIntFromProperties(dataStatus, Constants.MAXFEATUREID);
+		int maxFeatureSize = Utilities.getIntFromProperties(dataStatus, Constants.MAXFEATURESIZE);
+		int numberLines = Utilities.getIntFromProperties(dataStatus, Constants.NUMBER_SAMPLES);
+		int numberFeatures = Utilities.getIntFromProperties(dataStatus, Constants.TOTAL_FEATURES);
+		int vectorStatusPara = Utilities.getIntFromProperties(dataStatus, Constants.VESTOC_STATUS);
+		int modelSize = maxFeatureId * 4 / 1024;
+		int dataSetKb = 0;
+		if (parameters.containsKey(Constants.FILESTREAM_INPUT)){
+			// use file data 
+			dataSetKb += 512; // VectorStorage.FileStorage approximately cost
+			dataSetKb += VectorPool.RAMEstimate( maxFeatureSize);
+		}else{
+			dataSetKb += VectorStorage.RAMCompactStorage.RAMEstimate(numberLines, numberFeatures, vectorStatusPara);
+		}
+		return dataSetKb + modelSize;
 	}
 }

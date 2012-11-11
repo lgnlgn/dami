@@ -22,8 +22,8 @@ import org.dami.common.io.VectorStorage;
  *
  */
 public class VectorPool implements Runnable{
-	final static int DEFAUlTBUFFERSIZE = 20;
-	final static int VECTORSIZE = 20000;
+	public final static int DEFAUlTBUFFERSIZE = 20;
+	public final static int VECTORSIZE = 20000;
 	VectorStorage source;
 	Vector.Status vs;
 	Vector[] readingBuffer = null;
@@ -50,12 +50,12 @@ public class VectorPool implements Runnable{
 		readingBuffer = new Vector[bufferSize];
 		writingBuffer = new Vector[bufferSize];
 		int maxfs = Utilities.getIntFromProperties(source.getDataSetInfo(), Constants.MAXFEATURESIZE);
-		if (maxfs > bufferSize){
+		if (maxfs > VECTORSIZE){
 			for(int i = 1; i < bufferSize; i++){
-				readingBuffer[i] = new Vector(bufferSize);
-				writingBuffer[i] = new Vector(bufferSize);
+				readingBuffer[i] = new Vector(VECTORSIZE);
+				writingBuffer[i] = new Vector(VECTORSIZE);
 			}
-			commonFeatureSize = bufferSize;
+			commonFeatureSize = VECTORSIZE;
 			readingBuffer[0] = new Vector(maxfs + 1);
 			writingBuffer[0] = new Vector(maxfs + 1);
 		}else{
@@ -243,5 +243,17 @@ public class VectorPool implements Runnable{
 			}
 		}
 	}
-
+	
+	
+	public static int RAMEstimate(int bufferSize, int maxFeatureSize){
+		if (maxFeatureSize < VECTORSIZE){
+			return (int)(bufferSize *(maxFeatureSize * 8.5 + 20) * 1.1 / 1024);
+		}else{
+			return (int)(((bufferSize - 1) *(VECTORSIZE * 8.5 + 20 ) + maxFeatureSize * 8.5) * 1.1 / 1024);
+		}
+	}
+	
+	public static int RAMEstimate(int maxFeatureSize){
+		return RAMEstimate(DEFAUlTBUFFERSIZE, maxFeatureSize);
+	}
 }

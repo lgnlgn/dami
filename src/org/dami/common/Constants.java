@@ -32,6 +32,8 @@ public class Constants {
 //	public final static String BIAS_LABEL_TRANSFORMED="-wi";
 
 	public final static String BIAS_LABEL_ARG = "-w";
+	public final static String FILESTREAM_INPUT = "-f";
+	public final static String MULTICORE = "-m";
 	
 	public final static String STAT_SUFFIX = ".sta";
 }

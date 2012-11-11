@@ -181,6 +181,29 @@ public abstract class VectorStorage implements DataReader<Vector>{
 //			return current;
 		}
 		
+		/**
+		 * estimate ram storage space, return ...KB
+		 * @param vectors
+		 * @param totalFeatures
+		 * @param vectorStatusPara
+		 * @return
+		 */
+		public static int RAMEstimate(int vectors, long totalFeatures, int vectorStatusPara){
+			Vector.Status vs = new Vector.Status(vectorStatusPara);
+			long totalSize = 0;
+			if (vs.hasId)
+				totalSize += vectors * 4;
+			if (vs.hasLabel)
+				totalSize += vectors * 1;
+			if (vs.hasCount)
+				totalSize += vectors * 4;
+			totalSize += vectors * 4;
+			totalSize += totalFeatures * 4;
+			if (vs.hasWeight)
+				totalSize += totalFeatures * 4;
+			return (int)(Math.round(totalSize * 1.1) / 1024);
+		}
+		
 	}
 	
 	

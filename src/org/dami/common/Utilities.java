@@ -1,8 +1,13 @@
 package org.dami.common;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.Random;
+
+import org.apache.commons.cli.CommandLine;
 
 
 
@@ -190,5 +195,15 @@ public class Utilities {
 		int idx = name.lastIndexOf(".");
 		return f.getParent() + File.separator + name.substring(0, idx);
 	}
+	
+	public static String RAMEstimation(CommandLine cmd, Properties parameters, MemoryEstimater algo, String dbPath) throws IOException{
+		if (cmd.hasOption("f"))
+			parameters.put(Constants.FILESTREAM_INPUT, "");
+		Properties data = new Properties();
+		data.load(new FileInputStream(new File(dbPath + Constants.STAT_SUFFIX)));
+		int kb = algo.estimate(data, parameters);
+		return String.format("Algorithm memory usage approximate : %.1f MB (not include JVM)" , kb / 1024.0);
+	}
+	
 	
 }
