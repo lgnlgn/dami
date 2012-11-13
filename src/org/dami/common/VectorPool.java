@@ -29,9 +29,9 @@ public class VectorPool implements Runnable{
 	Vector[] readingBuffer = null;
 	Vector[] writingBuffer = null;
 
-	volatile boolean reading;  //control by reader, writer need to monitor it
-	volatile boolean writingfinished; // 
-	volatile boolean finished; // 
+	volatile boolean reading;  //control by reader, the writer need to monitor it
+	volatile boolean writingfinished; // flag for fetching process
+	volatile boolean finished; //  control by writer, the reader need to monitor it
 	boolean written ;
 
 	volatile int readingIdx;
@@ -122,16 +122,16 @@ public class VectorPool implements Runnable{
 			if (currentIdx < readingBufferSize){  // OK, fetch one
 				return readingBuffer[currentIdx];
 			}
-			else{
-				while(true){ //No, waiting for command
+			else{ //not OK, waiting for command
+				while(true){ //start monitoring flags 
 					if (readingIdx >= readingBufferSize){ // current buffer is not switched yet,
-						if (finished){ // the switch phrase said finished , 
-							return null;
+						if (finished){ // the switch phrase said finished , reading process must finish too
+							return null; //get a null Vector
 						}else{
-							; //
+							; // monitor again
 						}							
 					}else{  
-						// the other buffer is filled and switched ready.
+						// the other buffer is filled and switched ready. continue a new reading loop
 						// that is : readingIdx assigned to 0 by the writer
 						break;
 					}
@@ -150,16 +150,16 @@ public class VectorPool implements Runnable{
 			finished = true;
 			return;
 		}
-
+		//---------switch begin--------
 		Vector[] bufferSwap = readingBuffer;
 		readingBuffer = writingBuffer;
 		writingBuffer = bufferSwap;
-
-		readingBufferSize = writingBufferSize;  //parameters ready for readers
-		writingBufferSize = 0;
+		//--------switch finish, set flags --------
+		readingBufferSize = writingBufferSize;  //writingBufferSize was set in fetching process,  ready for readers
+		writingBufferSize = 0;    //writingBufferSize set to 0 
 		reading = true;      // close for the writer
 		backs = 0;
-		written = false;
+		written = false;     // tell the writer to start a new fetch loop
 
 		readingIdx = 0;      // set to 0, readers could found and then start to read
 		
@@ -173,7 +173,7 @@ public class VectorPool implements Runnable{
 		backs += 1;
 		if (backs >= readingBufferSize){ //all vectors are returned back
 			readingBufferSize = 0;
-			reading = false;  //tell the writer reading phrase finished
+			reading = false;  //tell the writer reading phrase is finished
 		}
 	}
 
@@ -202,39 +202,39 @@ public class VectorPool implements Runnable{
 			source.next(tmp);
 			if (tmp.featureSize == -1){ // meets the end while not fulfilled yet
 				i -= 1;
-				fillVector(0, writingBuffer[i]); 
+				fillVector(0, writingBuffer[i]); //copy the just-filled vector to [0]th slot
 				writingfinished = true;
 				break;
 			}
-			if (tmp.featureSize <= commonFeatureSize){
+			if (tmp.featureSize <= commonFeatureSize){ 
 				fillVector(i, tmp);
-			}else{ // first meet 
+			}else{ // first meet the largest vector
 				break;
 			}
 		}
-		if (i == writingBuffer.length){ 
+		if (i == writingBuffer.length){ //already filled the [length-1]th slot, need to filled the [0]th
 			source.next(tmp);
-			if (tmp.featureSize == -1){ 
+			if (tmp.featureSize == -1){  //no new vector fetched
 				i -= 1;
-				fillVector(0, writingBuffer[i]);
-				writingfinished = true;
+				fillVector(0, writingBuffer[i]); //copy the just-filled vector to [0]th slot
+				writingfinished = true; 
 			}else{
 				;
 			}
 		}
-		writingBufferSize = i; //index upper bound
+		writingBufferSize = i; //set vector size
 		written = true;
 	}
 
 	@Override
-	public void run() {
+	public void run() { //for writer thread
 		while(!finished){
 			if (reading && written){ // need to waiting for reader
 				;
-			}else if (!reading && written){
+			}else if (!reading && written){ //reading finish, reader waits for switch, 
 				this.switchBuffer();
 			}else{
-				// read some vectors from file to ram each loop  
+				// read some vectors from file to ram each loop, do not switch immediately.  
 				try{
 					this.fillBuffer();  
 				}catch (IOException e) {

@@ -16,7 +16,7 @@ public class Constants {
 	public final static String FACTOR = "factor";
 	public final static String CONVERGENCE = "convergence";
 		
-	public final static String AVG_WEIGHT="avgrating";
+	public final static String AVG_WEIGHT="avgweight";
 	public final static String NUMBER_SAMPLES="maxline";
 	public final static String MAXVECTORID="maxuid";
 	public final static String MAXFEATUREID="maxfeatureid";

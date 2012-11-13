@@ -11,7 +11,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.dami.classification.common.Evaluator;
-import org.dami.classification.lr.SGDLogisticRegression;
+import org.dami.classification.lr.AbstractSDGLogisticRegression;
+import org.dami.classification.lr.SGDL1LR;
+import org.dami.classification.lr.SGDL2LR;
 import org.dami.common.Constants;
 import org.dami.common.Utilities;
 import org.dami.common.io.FileVectorReader;
@@ -20,6 +22,7 @@ import org.dami.common.io.VectorStorage;
 public class SGDLRTrain {
 	
 	private Options buildOptions(){
+		
 		Options opts = new Options();
 		Option weight = OptionBuilder.withArgName("label weight").withValueSeparator(' ').hasArgs(2)
 				.withDescription("boost a label for training balance. For example: -w1 2 ." +
@@ -28,16 +31,21 @@ public class SGDLRTrain {
 				.withDescription("gradient speed. A default value is decided by the algorithm.").create("a");
 		Option regularization = OptionBuilder.withArgName("regularization").hasOptionalArg()
 				.withDescription("regularization for learning. A default value is decided by the algorithm.").create("r");
-
+		Option lx = OptionBuilder.withArgName("regularization type")
+				.withDescription("regularization type for LR. choose l1 or l2 for algorithm").create("l");
 		
 		opts.addOption(DamiOptionBuilder.input())
 			.addOption(DamiOptionBuilder.output("path for LR model"))
 			.addOption(DamiOptionBuilder.fileCache())
 			.addOption(DamiOptionBuilder.cvfold())
 			.addOption(DamiOptionBuilder.estimation())
-			.addOption(DamiOptionBuilder.stop(SGDLogisticRegression.DEFAULT_STOP))
-			.addOption(DamiOptionBuilder.loops(SGDLogisticRegression.DEFAULT_LOOPS))
-			.addOption(learningSpeed).addOption(regularization).addOption(weight);
+			.addOption(DamiOptionBuilder.stop(AbstractSDGLogisticRegression.DEFAULT_STOP))
+			.addOption(DamiOptionBuilder.loops(AbstractSDGLogisticRegression.DEFAULT_LOOPS))
+			.addOption(learningSpeed)
+			.addOption(regularization)
+			.addOption(weight)
+			.addOption(lx)
+			;
 		
 		return opts;
 	}
@@ -52,12 +60,19 @@ public class SGDLRTrain {
 			formatter.printHelp("exe", opts);
 			System.exit(0);
 		}
-		String path = cmd.getOptionValue("i");
+		String path = cmd.getOptionValue("train");
+		
 		if (path == null){
-			System.out.println("You must specify DB input");
+			System.out.println("You must specify training DB");
 			System.exit(0);
 		}else if ( !new File(path).exists() || !new File(path + ".sta").exists()){
 			System.out.println("DB file not found, or DB format not correct!");
+			System.exit(0);
+		}
+		
+		String lx = cmd.getOptionValue("l");
+		if (lx == null || !lx.equals("1") || !lx.equals("2")){
+			System.out.println("You must specify regularization type : 1 or 2 ");
 			System.exit(0);
 		}
 		Properties prop = new Properties();
@@ -82,8 +97,14 @@ public class SGDLRTrain {
 		if (stop != null){
 			prop.put(Constants.STOPCRITERIA, stop);
 		}
-		SGDLogisticRegression lr = new SGDLogisticRegression();
-
+		
+		
+		AbstractSDGLogisticRegression lr ;
+		if (lx.equals("1"))
+			lr = new SGDL1LR();
+		else
+			lr = new SGDL2LR();
+		
 		if (cmd.hasOption("e")){
 			System.out.println(Utilities.RAMEstimation(cmd, prop, lr, path));
 			System.exit(0);

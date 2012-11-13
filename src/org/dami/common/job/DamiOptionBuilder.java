@@ -5,14 +5,25 @@ import org.apache.commons.cli.OptionBuilder;
 
 public class DamiOptionBuilder {
 	public static Option input(){
-		return OptionBuilder.withArgName("path").hasArg()
+		return OptionBuilder.withArgName("input").hasArg()
 				.withDescription("path for DB input.").create("i");
 	}
 	
 	public static Option output(String description){
-		return  OptionBuilder.withArgName("path").hasOptionalArg()
+		return  OptionBuilder.withArgName("output").hasOptionalArg()
 				.withDescription(description).create("o");
 	}
+	
+	public static Option trainFile(){
+		return OptionBuilder.withArgName("train").hasArg()
+				.withDescription("path for training data.").create("train");
+	}
+	
+	public static Option testFile(){
+		return OptionBuilder.withArgName("test").hasArg()
+				.withDescription("path for testing data.").create("test");
+	}
+	
 	
 	public static Option fileCache(){
 		return OptionBuilder.hasArg(false).withDescription("use file input. Default data is loaded into RAM.").create("f");
