@@ -6,6 +6,8 @@ import sys
 #               from  http://www.grouplens.org/sites/www.grouplens.org/external_files/data/ml-10m.zip
 #               call simple_convert(movie_file, rating_file, output) to convert movie ids
 #               call split(rating_input, howmany = 10)  to split dataset into training & test parts
+#				for dami use, convert just splitted files using org.dami.recommendation.common.CFDataConverter
+# 				see TestSVD for testing algorithms 
 # Author:      lgn
 #
 # Created:     10/07/2012

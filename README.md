@@ -16,6 +16,7 @@ SGD for logistic regressions
 	
 - **recommendation**:
     SlopeOne, SVD, RSVD, itemneighborhood-SVD
+    (see movielens_converter.py)
 	
 - **significant test**:
  swap randomization
@@ -31,6 +32,13 @@ Future:
 
 
 ---------
+>*2012/10/22 Release Notes:*
+
+> - L1 & L2 logistic regression
+
+> - memory cost estimation
+
+> - simple commandline integration for LR
 
 >*2012/7/22 Release Notes:*
 
