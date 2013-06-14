@@ -1,6 +1,6 @@
 
 **dami**
-========
+=============
 
 Scalable algorithms in **da**ta **mi**ning.
 
