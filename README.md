@@ -1,7 +1,7 @@
 **dami**
 =============
 
-Scalable algorithms in **da**ta **mi**ning. (***I am shifting this project to feluca and will refactor it***)
+Scalable algorithms in **da**ta **mi**ning. (***I am shifting this project to feluca and will refactor it. so this project is deprecating***)
 
 dami is writen in Java. Our goal is to make algorithms that can handle hundreds of millions of data with a limited memory PC 
 
