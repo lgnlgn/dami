@@ -8,7 +8,7 @@ dami is writen in Java. Our goal is to make algorithms that can handle hundreds 
 
 Currently we have : 
 
-- **utility**: Asynchronous vector buffer, High performance  and simple text parser. *More tests needs*
+- **utility**: Buffered vectors pool for dataset IO, High performance and simple text parser. (*More tests need*)
 
 - **classification**: 
 SGD for logistic regressions
