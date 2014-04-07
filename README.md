@@ -1,15 +1,14 @@
-
 **dami**
 =============
 
-Scalable algorithms in **da**ta **mi**ning.
+Scalable algorithms in **da**ta **mi**ning. (***I am shifting this project to feluca and will refactor it. so this project is deprecating***)
 
 dami is writen in Java. Our goal is to make algorithms that can handle hundreds of millions of data with a limited memory PC 
 
 
 Currently we have : 
 
-- **utility**: Asynchronous vector buffer, High performance  and simple text parser. *More tests needs*
+- **utility**: Buffered vectors pool for dataset IO, High performance and simple text parser. (*More tests need*)
 
 - **classification**: 
 SGD for logistic regressions
