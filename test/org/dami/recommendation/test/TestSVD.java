@@ -33,10 +33,10 @@ public class TestSVD {
 		/*
 		 *  different model may fitted for different parameters!
 		 */
-//		Recommender model = new SVDModel();
+		Recommender model = new SVDModel();
 //		Recommender model = new RSVDModel();
 //		Recommender model = new ItemNeighborModel();
-		Recommender model = new SlopeOne();
+//		Recommender model = new SlopeOne();
 		
 		Properties p = new Properties();
 		p.setProperty(Constants.ALPHA, "0.006");

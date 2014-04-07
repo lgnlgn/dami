@@ -44,8 +44,8 @@ public class CFDataConverter {
 	}
 
 	public static void main(String[] args) throws IOException{
-		String input = "e:/data/ml-10M100K/movielens.txt.train";
-		String output = "e:/data/ml-10M100K/movielens.train";
+		String input = "e:/data/ml-10M100K/movielens.txt.test";
+		String output = "e:/data/ml-10M100K/movielens.test";
 		FileVectorConverter fvc = starsRatingDataConverter(input, output, "\\s");
 		fvc.convert(500000);
 	}
